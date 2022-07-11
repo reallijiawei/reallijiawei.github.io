@@ -1,3 +1,12 @@
+---
+layout: post
+title: jekyll+github pages搭建博客的过程
+categories: jekyll
+tags: [jekyll]
+---
+
+
+
 # jekyll+github pages搭建博客的过程
 
 jekyll是一个静态网页生成的工具，可以把markdown等格式的文件转换成静态的网页，生成了之后可以在本地直接通过http://localhost:4000来查看静态的网页。
