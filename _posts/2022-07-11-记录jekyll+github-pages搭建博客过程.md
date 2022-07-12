@@ -27,7 +27,11 @@ jekyll是一个静态网页生成的工具，可以把markdown等格式的文件
 
 但是正如生活一样，想要一点问题都没遇到也是不太可能。
 
+
+
 你可能会遇到，4000端口被占用的问题，因为jekyll默认使用4000端口。这时用netstat |find "4000"查看哪个进程占用了这个端口，把他杀掉就行。或者在jekyll项目的_config.yml文件中加上`port: xxx`，可以修改默认的端口为空闲的端口就可以了。
+
+
 
 也可能会遇到执行bundle exec jekyll serve的时候，有很多gem库的版本不对，这时可以用gem install -v 1.0.1 xxx来安装指定版本的库
 
@@ -59,7 +63,7 @@ github pages是github提供的一个托管静态网页的功能。原理就是�
 
 项目的_posts目录是存放博客的位置，我们在这里添加一个新的文件，格式是年-月-日-xxxx.md。然后文件的开头要加一个YAML代码块，来指示该博文的格式，标题，标签等。
 
-![/assets/images/3.PNG]()
+![](/assets/images/3.PNG)
 
 然后下面就可以用markdown的语法来写博文了，写完可以本地bundle exec jekyll serve，看下效果，也可以直接push到远端，让github pages渲染。我比较懒，就直接push了。
 
