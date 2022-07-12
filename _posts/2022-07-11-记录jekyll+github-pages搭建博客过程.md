@@ -21,7 +21,11 @@ github pages是github提供的一个托管静态网页的功能。原理就是�
 
 上面建立的网站太过简单了，如果我们想生成样式好看的博客网站，就需要用jekyll了。
 
-可以直接fork别人已经写好的jekyll博客模板：http://jekyllthemes.org/ ,fork完之后把项目名字改成用户名.github.io就可以了。这样自己的博客就搭好了，就这样简单。
+可以直接fork别人已经写好的jekyll博客模板：
+
+[]: http://jekyllthemes.org/
+
+,fork完之后把项目名字改成用户名.github.io就可以了。这样自己的博客就搭好了，就这样简单。
 
 
 
