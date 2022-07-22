@@ -1,0 +1,1277 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.2">Jekyll</generator><link href="/jekyll-theme-yat/feed.xml" rel="self" type="application/atom+xml" /><link href="/jekyll-theme-yat/" rel="alternate" type="text/html" /><updated>2022-07-22T09:14:49+00:00</updated><id>/jekyll-theme-yat/feed.xml</id><title type="html">Lil Bear’s blog</title><subtitle>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</subtitle><author><name>Lil bear</name></author><entry><title type="html">docker用法</title><link href="/jekyll-theme-yat/docker/2022/07/15/docker.html" rel="alternate" type="text/html" title="docker用法" /><published>2022-07-15T00:00:00+00:00</published><updated>2022-07-15T00:00:00+00:00</updated><id>/jekyll-theme-yat/docker/2022/07/15/docker</id><content type="html" xml:base="/jekyll-theme-yat/docker/2022/07/15/docker.html"><![CDATA[<h3 id="查看对应的容器日志">查看对应的容器日志:</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker logs dockerID</code></p>
+
+<h3 id="重启docker服务">重启docker服务:</h3>
+
+<p><code class="language-plaintext highlighter-rouge">systemctl restart docker</code></p>
+
+<h3 id="删除容器">删除容器：</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker rm containerID</code></p>
+
+<h3 id="删除镜像">删除镜像</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker rmi [image]</code></p>
+
+<h3 id="把镜像保存成压缩包">把镜像保存成压缩包：</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker save -o my_ubuntu_v3.tar runoob/ubuntu:v3</code></p>
+
+<h3 id="导入本地镜像">导入本地镜像</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker load &lt; xxx.tar</code></p>
+
+<h3 id="查看容器的具体信息可以用">查看容器的具体信息可以用：</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker inspect 容器ID</code></p>
+
+<h3 id="查看docker使用情况">查看docker使用情况</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker stats（持续监控）</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">Docker stats --no-stream(固定输出)</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">Docker stats --no-stream docker_name docker_id （查看具体容器）</code></p>
+
+<h3 id="更新docker-配置">更新docker 配置：</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker update -m 2g --memory-swap -1 docker_id</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">docker update -m 16g --memery-swap 16g docker_id</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">docker update --cpus=1</code></p>
+
+<h3 id="查看docker使用cpu内存情况">查看docker使用cpu,内存情况</h3>
+
+<p>命令：<code class="language-plaintext highlighter-rouge">docker stats</code></p>
+
+<h3 id="要静态的显示并按内存使用多少排列">要静态的显示，并按内存使用多少排列：</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker stats --no-stream --format "table \t\t\t" | sort -k 4 -h</code></p>
+
+<h3 id="查看docker详细配置">查看docker详细配置</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker inspect dockerID | grep IPAddress</code></p>
+
+<h3 id="重启了宿主机后docker服务没有启动">重启了宿主机后docker服务没有启动</h3>
+<p><code class="language-plaintext highlighter-rouge">systemctl start docker</code>启动docker 服务</p>
+
+<p><code class="language-plaintext highlighter-rouge">systemctl enable docker.service</code> 即可设置开机自启动</p>
+
+<p><code class="language-plaintext highlighter-rouge">systemctl list-unit-files</code> 可以查看开机启动的列表</p>
+
+<p>其他的docker容器都可以正常的启动，但是docker-registry-frontend容器启动后却连接不上镜像仓库</p>
+
+<p>查看dockerl logs ，发现显示如下内容</p>
+
+<p>刚开始以为这是登不上的原因，但其实这是这个容器启动的正常显示，</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Module auth_kerb disabled.
+To activate the new configuration, you need to run:
+  service apache2 restart
+</code></pre></div></div>
+
+<p>这些并不是错误，只是这个镜像本身把apache2的auth_kerb模块禁用了，如果想启用新的配置就重启apache2服务，其实不用管。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.18.0.2. Set the 'ServerName' directive globally to suppress this message
+</code></pre></div></div>
+
+<p>本来以为这句也是错误，但其实也是正常的</p>
+
+<p>因为用 <code class="language-plaintext highlighter-rouge">docker inspect dockerID | grep IPAddress</code> ，查看了该docker的IP，确实也是172.18.0.2，说明是对的。</p>
+
+<p>最后当我尝试通过10.154.105.100:5001登陆时，会报错：No route to host，根据这个报错，
+通过查看<code class="language-plaintext highlighter-rouge">firewall-cmd --state</code>，发现防火墙在开着，猜想可能是防火墙的把访问阻挡住了</p>
+
+<p>用<code class="language-plaintext highlighter-rouge">systemctl stop firewalld.service</code> 命令关闭防火墙，问题解决</p>
+
+<p>然后用<code class="language-plaintext highlighter-rouge">systemctl disable firewalld.service</code> 命令，阻止防火墙开机启动</p>
+
+<p>另外，centos还有SELINUX服务，也是类似防火墙的服务，需要关闭：</p>
+
+<p>getenforce  查看selinux服务是否开启，ENforcing就是开启状态，</p>
+
+<p>setenforce 0 可以暂时关闭SELINUX，如果想永久关闭，</p>
+
+<p>需要<code class="language-plaintext highlighter-rouge">vi /etc/selinux/config</code>，将SELINUX=enforcing改为SELINUX=disabled，重启后生效</p>
+
+<p>总结：</p>
+
+<p>1.装好linux后要首先关闭防火墙</p>
+
+<p>2.看日志时，主要看报错的error ,其他的warning， fail，disabled，couldn’t find 等提示有可能都是正常的</p>
+
+<h3 id="docker-制作镜像">docker 制作镜像：</h3>
+
+<p>1.docker run –net=host –name=test-git -v ~/.ssh:/root/.ssh -v /data2/test/:/data2/test/ -it registry.me/wxhui/xxx-compiler:8025.2 /bin/bash运行起来</p>
+
+<p>2.做修改</p>
+
+<p>3.在宿主机上docker commit dockerID centos:test</p>
+
+<p><strong>修改镜像名称</strong></p>
+
+<p>docker tag imageID xxx/xxxx/xxx-compiler:tag</p>
+
+<p>docker commit做的镜像只会保存非映射目录，就是说-v映射的目录不会保存</p>
+
+<h3 id="修改docker默认储存目录">修改docker默认储存目录</h3>
+
+<p>docker的默认储存目录是/var/lib/docker</p>
+
+<p>修改方法如下:</p>
+
+<p>修改docker的systemd的 docker.service的配置文件:</p>
+
+<p>systemctl disable docker</p>
+
+<p>systemctl enable docker</p>
+
+<p>显示结果</p>
+
+<p>Created symlink from /etc/systemd/system/multi-user.target.wants/docker.service to /usr/lib/systemd/system/docker.service.</p>
+
+<p>修改这个 /usr/lib/systemd/system/docker.service，在 ExecStart变量增加这个选项 <code class="language-plaintext highlighter-rouge">--graph /data/docker</code>,</p>
+
+<p>就可以把默认储存位置改成/data/docker。</p>
+
+<p>然后</p>
+
+<p>systemctl disable docker</p>
+
+<p>systemctl enable docker</p>
+
+<p>systemctl daemon-reload</p>
+
+<p>systemctl restart docker</p>
+
+<p>就可以了</p>
+
+<p>docker info可以看下储存位置，可以看到 Docker Root Dir已经改了</p>]]></content><author><name>Lil bear</name></author><category term="docker" /><category term="docker" /><summary type="html"><![CDATA[查看对应的容器日志: docker logs dockerID 重启docker服务: systemctl restart docker 删除容器： docker rm containerID 删除镜像 docker rmi [image] 把镜像保存成压缩包： docker save -o my_ubuntu_v3.tar runoob/ubuntu:v3 导入本地镜像 docker load &lt; xxx.tar 查看容器的具体信息可以用： docker inspect 容器ID 查看docker使用情况 docker stats（持续监控） Docker stats --no-stream(固定输出) Docker stats --no-stream docker_name docker_id （查看具体容器） 更新docker 配置： docker update -m 2g --memory-swap -1 docker_id docker update -m 16g --memery-swap 16g docker_id docker update --cpus=1 查看docker使用cpu,内存情况 命令：docker stats 要静态的显示，并按内存使用多少排列： docker stats --no-stream --format "table \t\t\t" | sort -k 4 -h 查看docker详细配置 docker inspect dockerID | grep IPAddress 重启了宿主机后docker服务没有启动 systemctl start docker启动docker 服务 systemctl enable docker.service 即可设置开机自启动 systemctl list-unit-files 可以查看开机启动的列表 其他的docker容器都可以正常的启动，但是docker-registry-frontend容器启动后却连接不上镜像仓库 查看dockerl logs ，发现显示如下内容 刚开始以为这是登不上的原因，但其实这是这个容器启动的正常显示， Module auth_kerb disabled. To activate the new configuration, you need to run: service apache2 restart 这些并不是错误，只是这个镜像本身把apache2的auth_kerb模块禁用了，如果想启用新的配置就重启apache2服务，其实不用管。 AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.18.0.2. Set the 'ServerName' directive globally to suppress this message 本来以为这句也是错误，但其实也是正常的 因为用 docker inspect dockerID | grep IPAddress ，查看了该docker的IP，确实也是172.18.0.2，说明是对的。 最后当我尝试通过10.154.105.100:5001登陆时，会报错：No route to host，根据这个报错， 通过查看firewall-cmd --state，发现防火墙在开着，猜想可能是防火墙的把访问阻挡住了 用systemctl stop firewalld.service 命令关闭防火墙，问题解决 然后用systemctl disable firewalld.service 命令，阻止防火墙开机启动 另外，centos还有SELINUX服务，也是类似防火墙的服务，需要关闭： getenforce 查看selinux服务是否开启，ENforcing就是开启状态， setenforce 0 可以暂时关闭SELINUX，如果想永久关闭， 需要vi /etc/selinux/config，将SELINUX=enforcing改为SELINUX=disabled，重启后生效 总结： 1.装好linux后要首先关闭防火墙 2.看日志时，主要看报错的error ,其他的warning， fail，disabled，couldn’t find 等提示有可能都是正常的 docker 制作镜像： 1.docker run –net=host –name=test-git -v ~/.ssh:/root/.ssh -v /data2/test/:/data2/test/ -it registry.me/wxhui/xxx-compiler:8025.2 /bin/bash运行起来 2.做修改 3.在宿主机上docker commit dockerID centos:test 修改镜像名称 docker tag imageID xxx/xxxx/xxx-compiler:tag docker commit做的镜像只会保存非映射目录，就是说-v映射的目录不会保存 修改docker默认储存目录 docker的默认储存目录是/var/lib/docker 修改方法如下: 修改docker的systemd的 docker.service的配置文件: systemctl disable docker systemctl enable docker 显示结果 Created symlink from /etc/systemd/system/multi-user.target.wants/docker.service to /usr/lib/systemd/system/docker.service. 修改这个 /usr/lib/systemd/system/docker.service，在 ExecStart变量增加这个选项 --graph /data/docker, 就可以把默认储存位置改成/data/docker。 然后 systemctl disable docker systemctl enable docker systemctl daemon-reload systemctl restart docker 就可以了 docker info可以看下储存位置，可以看到 Docker Root Dir已经改了]]></summary></entry><entry><title type="html">关于解耦的思考</title><link href="/jekyll-theme-yat/%E8%A7%A3%E8%80%A6/2022/07/15/jieou.html" rel="alternate" type="text/html" title="关于解耦的思考" /><published>2022-07-15T00:00:00+00:00</published><updated>2022-07-15T00:00:00+00:00</updated><id>/jekyll-theme-yat/%E8%A7%A3%E8%80%A6/2022/07/15/jieou</id><content type="html" xml:base="/jekyll-theme-yat/%E8%A7%A3%E8%80%A6/2022/07/15/jieou.html"><![CDATA[<h2 id="产品线内部的解耦">产品线内部的解耦</h2>
+
+<h3 id="解耦方向">解耦方向：</h3>
+
+<h4 id="插件化">插件化</h4>
+
+<p><strong>插件的好处：</strong></p>
+
+<p>1.编译时不用-l 写死链接上这个库</p>
+
+<p>2.可以通过代码决定运行时啥时候加载，而且可以卸载。</p>
+
+<p>3.各插件之间可以通过函数指针的形式进一步解除依赖</p>
+
+<p>不使用插件的场景：</p>
+
+<p><img src="/assets/images/so1.PNG" alt="" /></p>
+
+<p>假设依赖关系是这样的，那么编译顺序基本上得是so3-&gt;so2-&gt;so1-&gt;可执行程序。这样依赖的就比较紧密，编译顺序也比较固定。</p>
+
+<p>使用插件：</p>
+
+<p><img src="/assets/images/so2.PNG" alt="" /></p>
+
+<p>对于插件来说，编译时可以不链接，在运行时才加载，所以编译的顺序无所谓。比如插件1用到了插件2中的函数，那么插件1可以动态的使用dlopen，dlsym等函数从插件2中拿到对应的函数使用。</p>
+
+<p>插件的加载流程是，加载父插件，然后父插件再去加载子插件。一般来说只有插件加载的init函数是通过dlsym来获取的，其他的函数如果都用这个方式获取，就有些死板和不方便了。更加灵活的一种方式是采用<strong>函数指针</strong>（即注册的方式）来更灵活的解决各插件之间的依赖。</p>
+
+<p>举例来说，插件1使用到了插件2中的函数，两种方式：</p>
+
+<p>1.通过dlsym获取这个函数，然后使用，但是过程有些繁琐，必须先获取再使用。</p>
+
+<p>2.函数指针的方式是：插件1中定义一个<strong>全局的函数指针</strong>，然后直接用这个函数指针来代替这个函数，即使是这个函数指针没有实际指向内容，这样编译时是没有什么问题的。什么时候给这个函数指针赋值呢？等到插件2初始化的时候。相当于是插件1给了一个函数的注册点，然后插件2等到初始化的时候再往上注册就行了。</p>
+
+<p>这种方式和方式1比起来，更加灵活，插件1不用dlsym获取到了真正的函数之后才能用，直接可以先用起来，然后插件2再往上注册真正的函数就行了。</p>
+
+<p>如果插件2和插件3想互相用对方的函数应该怎么办呢？</p>
+
+<p>1.直接-l链接过来用，这样插件之前就有了耦合，不建议使用</p>
+
+<p>2.通过dlsym获取这个函数</p>
+
+<p>3.函数指针的方式：在插件2和插件3的父插件1中定义一些<strong>全局的函数指针</strong>，因为插件2和插件3是插件1的子插件，所以可以直接获取到这些函数指针，并直接使用。插件2在加载的时候，获取到插件1定义的函数指针，其中有些指针是指向插件2的，这时给它附上值，这个函数指针就真正的指向了一个实际的函数。如果插件2用到了一些插件3的函数，获取到指针之后也可以直接用，这时指针还未实际指向插件3的函数，但是不要紧，等到插件3初始化的时候把函数注册上去就行了。</p>
+
+<p>上面说到的全局函数指针可以优化成：static定义的指针，然后插件1再提供一个函数来操作这个指针就行。</p>
+
+<h2 id="产品线之间的解耦">产品线之间的解耦</h2>]]></content><author><name>Lil bear</name></author><category term="解耦" /><category term="解耦" /><summary type="html"><![CDATA[产品线内部的解耦 解耦方向： 插件化 插件的好处： 1.编译时不用-l 写死链接上这个库 2.可以通过代码决定运行时啥时候加载，而且可以卸载。 3.各插件之间可以通过函数指针的形式进一步解除依赖 不使用插件的场景： 假设依赖关系是这样的，那么编译顺序基本上得是so3-&gt;so2-&gt;so1-&gt;可执行程序。这样依赖的就比较紧密，编译顺序也比较固定。 使用插件： 对于插件来说，编译时可以不链接，在运行时才加载，所以编译的顺序无所谓。比如插件1用到了插件2中的函数，那么插件1可以动态的使用dlopen，dlsym等函数从插件2中拿到对应的函数使用。 插件的加载流程是，加载父插件，然后父插件再去加载子插件。一般来说只有插件加载的init函数是通过dlsym来获取的，其他的函数如果都用这个方式获取，就有些死板和不方便了。更加灵活的一种方式是采用函数指针（即注册的方式）来更灵活的解决各插件之间的依赖。 举例来说，插件1使用到了插件2中的函数，两种方式： 1.通过dlsym获取这个函数，然后使用，但是过程有些繁琐，必须先获取再使用。 2.函数指针的方式是：插件1中定义一个全局的函数指针，然后直接用这个函数指针来代替这个函数，即使是这个函数指针没有实际指向内容，这样编译时是没有什么问题的。什么时候给这个函数指针赋值呢？等到插件2初始化的时候。相当于是插件1给了一个函数的注册点，然后插件2等到初始化的时候再往上注册就行了。 这种方式和方式1比起来，更加灵活，插件1不用dlsym获取到了真正的函数之后才能用，直接可以先用起来，然后插件2再往上注册真正的函数就行了。 如果插件2和插件3想互相用对方的函数应该怎么办呢？ 1.直接-l链接过来用，这样插件之前就有了耦合，不建议使用 2.通过dlsym获取这个函数 3.函数指针的方式：在插件2和插件3的父插件1中定义一些全局的函数指针，因为插件2和插件3是插件1的子插件，所以可以直接获取到这些函数指针，并直接使用。插件2在加载的时候，获取到插件1定义的函数指针，其中有些指针是指向插件2的，这时给它附上值，这个函数指针就真正的指向了一个实际的函数。如果插件2用到了一些插件3的函数，获取到指针之后也可以直接用，这时指针还未实际指向插件3的函数，但是不要紧，等到插件3初始化的时候把函数注册上去就行了。 上面说到的全局函数指针可以优化成：static定义的指针，然后插件1再提供一个函数来操作这个指针就行。 产品线之间的解耦]]></summary></entry><entry><title type="html">linux知识</title><link href="/jekyll-theme-yat/linux/2022/07/14/linux.html" rel="alternate" type="text/html" title="linux知识" /><published>2022-07-14T00:00:00+00:00</published><updated>2022-07-14T00:00:00+00:00</updated><id>/jekyll-theme-yat/linux/2022/07/14/linux</id><content type="html" xml:base="/jekyll-theme-yat/linux/2022/07/14/linux.html"><![CDATA[<p>看时间date</p>
+
+<p>看时间戳 date +%s</p>
+
+<p><strong>dnf</strong></p>
+
+<p>是centos的包管理工具</p>
+
+<p><code class="language-plaintext highlighter-rouge">vi /etc/yum.repos.d/CentOS-AF.repo</code>配置好源之后， 可以直接<code class="language-plaintext highlighter-rouge">dnf install</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">ls -lR|grep "^-"|wc -l</code> 可以统计当前目录及子目录下所有文件的个数</p>
+
+<p><code class="language-plaintext highlighter-rouge">**ls -lR** | grep "^d"| wc -l</code> 可以统计当前目录及子目录下所有目录的个数</p>
+
+<p>R表示递归，去掉R只统计当前目录</p>
+
+<p><code class="language-plaintext highlighter-rouge">**ls -lrt** /tmp | wc -l</code> 可以统计指定的目录</p>
+
+<p><code class="language-plaintext highlighter-rouge">ps -efww|grep sendmail |grep -v grep|cut -c 9-15|xargs kill -9</code> 杀掉同名进程sendmail</p>
+
+<p><strong>用scp远程传输文件</strong>:</p>
+
+<p><code class="language-plaintext highlighter-rouge">scp -P 22345 afwiki_hci.tar admin@10.154.105.100:/data/</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">rpm -qf /sfos/system/resource/lang/alarmd/alarmd.ini</code>可以查安装包</p>
+
+<p><strong>lsof</strong></p>
+
+<p>可以看文件被谁引用，由于unix一切皆文件，所以也可以看端口被谁监听</p>
+
+<p><code class="language-plaintext highlighter-rouge">lsof -n |grep 80</code></p>
+
+<p>还可以看某个进程都打开了哪些文件：</p>
+
+<p><code class="language-plaintext highlighter-rouge">lsof -p pid</code></p>
+
+<p><strong>netstat</strong> -anp也可以看端口监听情况</p>
+
+<p><strong><code class="language-plaintext highlighter-rouge">ps -auxf |grep dap</code></strong>可以看进程详细信息包括谁是谁的子进程等</p>
+
+<h2 id="添加定时脚本">添加定时脚本</h2>
+<p>Linux定时脚本是/etc/crontab这个脚本文件，linux每分钟都会调用这个这个脚本，执行其中的命令。</p>
+
+<p><img src="/assets/images/crontab.PNG" alt="" /></p>
+
+<p>可以直接在这里面添加命令，如</p>
+
+<p>* * * * * root /etc/init.d/smb restart</p>
+
+<p>也可以添加脚本</p>
+
+<p>* * * * *root test.sh</p>
+
+<p>也可以像图片中那样，执行整个文件夹里的文件，用run-parts 命令即可</p>
+
+<p>前面的定时时间设置也比较简单，参考给出的介绍即可。</p>
+
+<p>需要注意的是</p>
+
+<p>1.如果想固定的一个时间执行，比如9点，或星期六，那就再对应的位置直接填数字即可，如果是多个时间点，比如7点和9点，中间用逗号隔开写就行</p>
+
+<p>2.如果是想表示每隔多少时间执行一次，比如每隔两天，可以在对应的位置用*/2表示</p>
+
+<p>3.如果是想表示时间段，比如5点到9点，可以用5-9表示</p>
+
+<p>Linux默认创建的文件都是文本文件，只是可读可写的（rw），并没有可执行的权限(x)，因此创建的脚本文件需要手动加权限</p>
+
+<p>chmod 755 test.sh</p>
+
+<p>为整个目录加权限</p>
+
+<p>chmod -R 755 /data</p>
+
+<p>数字代表的意思：</p>
+
+<p>r:4 可读</p>
+
+<p>w:2 可写</p>
+
+<p>x:1 可执行</p>
+
+<h4 id="ls--l-可以查看权限和修改时间文件大小等详细信息">ls -l 可以查看权限和修改时间，文件大小等详细信息</h4>
+
+<h4 id="查看各磁盘分区情况">查看各磁盘分区情况：</h4>
+
+<p>fdisk -l</p>
+
+<h4 id="下载对应网站的某个文件">下载对应网站的某个文件：</h4>
+<p>curl -O 10.154.105.100:5000/opt/start_wiki.sh</p>
+
+<h4 id="启动服务">启动服务：</h4>
+
+<p>/etc/init.d/apache start</p>
+
+<p>或者</p>
+
+<p>service apache start</p>
+
+<h4 id="最新的linux使用了systemd这个守护进程来实现对服务的管理">最新的linux使用了systemd这个守护进程来实现对服务的管理</h4>
+
+<p>命令：systemctl start apache</p>
+
+<h4 id="杀死一个进程">杀死一个进程：</h4>
+<p>kill -9 pid</p>
+
+<h4 id="手动挂载磁盘后要将挂载信息写入etcfstab中否则下次开机挂载就没了">手动挂载磁盘后，要将挂载信息写入/etc/fstab中，否则下次开机挂载就没了：</h4>
+<p>/dev/vg-data/lv-data    /data                   ext4    defaults        0 0</p>
+
+<h4 id="数据库的命令最后一定要加上分号-表示这个命令的结束">数据库的命令，最后一定要加上分号; 表示这个命令的结束</h4>
+
+<h4 id="往文件里写信息的命令">往文件里写信息的命令：</h4>
+<p>echo “10.154.105.100  dockerhub.sfos.org” » /etc/hosts</p>
+
+<p>&gt;&gt;表示追加到文件末尾</p>
+
+<p>&gt;表示覆盖文件</p>
+
+<h4 id="linux-解压zip文件命令">Linux 解压zip文件命令：</h4>
+<p>unzip test.zip /data/temp</p>
+
+<h4 id="统计目录下文件的大小">统计目录下文件的大小：</h4>
+<p>du -h –max-depth=1 /data &gt; /blackbox/docker_space_infors.txt</p>
+
+<p>-h 以k,m,g，t等格式显示</p>
+
+<p>-m 以m的格式显示</p>
+
+<p>-k 以k的格式显示</p>
+
+<p>–max-depth =1 即统计当前目录下文件夹的大小</p>
+
+<h4 id="对文件按某一列排序">对文件按某一列排序：</h4>
+<p>sort -h -k1 /blackbox/docker_space_infors.txt -o /blackbox/docker_space_infors.txt</p>
+
+<p>-h 按照k,m,g,t等格式排序</p>
+
+<p>-n 按照数字排序</p>
+
+<p>-k1 第一列</p>
+
+<p>-o 输出文件的名字，可以为原文件，这样会把源文件覆盖掉</p>
+
+<h4 id="linux-缺省的运行级rhs用到的级别如下">linux 缺省的运行级，RHS用到的级别如下：</h4>
+
+<p>0 - 停机 ，机器关闭。</p>
+
+<p>1 - 单用户模式 。就像Win9x下的安全模式类似</p>
+
+<p>2 - 多用户，但是没有NFS  进入无网络服务的多用户模式</p>
+
+<p>3 - 完全多用户模式 ，是标准的运行级。</p>
+
+<p>4 - 没有用到 ，一般不用，在一些特殊情况下可以用它来做一些事情。例如在笔记本 电脑的电池用尽时，可以切换到这个模式来</p>
+
+<p>5 - X11   ，进到X Window系统了。</p>
+
+<p>6 - 重新启动 ，运行init 6机器就会重启</p>
+
+<h4 id="linux开机后开启守护进程的过程">linux开机后开启守护进程的过程</h4>
+<p>1.系统加电之后，首先进行的硬件自检，然后是bootloader对系统的初始化，加载内核。</p>
+
+<p>2.启动内核，检测硬件，挂载根文件系统，初始化所有的设备驱动程序和数据结构</p>
+
+<p>3.启动init进程，pid号为1</p>
+
+<p>4.init进程根据/etc/inittab中的initdefault确定系统默认的运行级别</p>
+
+<p>5.执行/etc/rc(n).d中的脚本，如果运行级别是3，那就执行/etc/rc3.d中的脚本</p>
+
+<p>6./etc/rc(n).d中的脚本软连接到/etc/init.d中，S表示start,K 表示stop，是传给init.d的参数，后面的数字表示优先级,数值小的先执行，数值大的后执行。例如S01sysstat表示执行/etc/rc.d/init.d/sysstat start</p>
+
+<h4 id="stat-xxx-可以查看文件的访问时间">stat xxx 可以查看文件的访问时间</h4>
+
+<h4 id="time-xxsh可以看该脚本的执行时间">time xx.sh可以看该脚本的执行时间</h4>
+
+<h4 id="c-内置库的头文件位置usrincludexxxh">C 内置库的头文件位置/usr/include/xxx.h</h4>
+
+<h4 id="删除7天以上的文件">删除7天以上的文件</h4>
+
+<p>find . -maxdepth 1 ! -name “develop” -mtime +7 -exec rm -rf {} \;</p>
+
+<h4 id="指定pip源">指定pip源</h4>
+
+<p>pip install -i http://mirrors.xxxx.org/pypi/simple –trusted-host mirrors.xxxx.org requests_toolbelt</p>
+
+<h4 id="可以改后台密码">可以改后台密码</h4>
+<p>passwd admin</p>
+
+<h4 id="vi模式粘贴乱缩进解决">vi模式粘贴乱缩进解决</h4>
+<p>:set paste</p>
+
+<h4 id="显示前5行后5行">显示前5行后5行</h4>
+<p>head -n  5
+tail -n 5
+用法： head -n 5 test.txt
+或 cat test.txt| head -n 5</p>
+
+<h4 id="获取随机数">获取随机数</h4>
+<p>cat /dev/urandom （快）
+cat /dev/random（慢）</p>
+
+<h4 id="cat-devurandom--od--x">cat /dev/urandom | od -x</h4>
+<p>获取一行随机数，转为16进制</p>
+
+<h4 id="linux系统下简单模拟高cpu高内存高负载的方法">Linux系统下简单模拟高CPU\高内存\高负载的方法</h4>
+<h6 id="cpu">CPU</h6>
+
+<p>下面命令会创建 CPU 负荷，方法是通过压缩随机数据并将结果发送到 /dev/null：</p>
+
+<p><code class="language-plaintext highlighter-rouge">cat /dev/urandom | gzip -9 &gt; /dev/null</code></p>
+
+<p>如果你想要更大的负荷，或者系统有多个核，那么只需要对数据进行压缩和解压就行了，像这样：</p>
+
+<p><code class="language-plaintext highlighter-rouge">cat /dev/urandom | gzip -9 | gzip -d | gzip -9 | gzip -d &gt; /dev/null</code></p>
+
+<p>按下 CTRL+C 来终止进程。</p>
+
+<h6 id="内存占用">内存占用</h6>
+
+<p>下面命令会减少可用内存的总量。它是通过在内存中创建文件系统然后往里面写文件来实现的。你可以使用任意多的内存，只需要往里面写入更多的文件就行了。</p>
+
+<p>首先，创建一个挂载点，然后将 ramfs 文件系统挂载上去：</p>
+
+<p><code class="language-plaintext highlighter-rouge">mkdir z</code>
+<code class="language-plaintext highlighter-rouge">mount -t ramfs ramfs z/</code></p>
+
+<p>第二步，使用 dd 在该目录下创建文件。这里我们创建了一个 128M 的文件：</p>
+
+<p><code class="language-plaintext highlighter-rouge">dd if=/dev/zero of=z/file bs=1M count=128</code></p>
+
+<p>文件的大小可以通过下面这些操作符来修改：</p>
+
+<p>bs= 块大小。可以是任何数字后面接上 B（表示字节），K（表示 KB），M（ 表示 MB）或者 G（表示 GB）。
+count= 要写多少个块。</p>
+
+<h6 id="磁盘-io">磁盘 I/O</h6>
+
+<p>创建磁盘 I/O 的方法是先创建一个文件，然后使用 for 循环来不停地拷贝它。</p>
+
+<p>下面使用命令 dd 创建了一个全是零的 1G 大小的文件：</p>
+
+<p><code class="language-plaintext highlighter-rouge">dd if=/dev/zero of=loadfile bs=1M count=1024</code></p>
+
+<p>下面命令用 for 循环执行 10 次操作。每次都会拷贝 loadfile 来覆盖 loadfile1：</p>
+
+<p><code class="language-plaintext highlighter-rouge">for i in {1…10}; do cp loadfile loadfile1; done</code></p>
+
+<p>通过修改 {1…10} 中的第二个参数来调整运行时间的长短。（LCTT 译注：你的 Linux 系统中的默认使用的 cp 命令很可能是 cp -i 的别名，这种情况下覆写会提示你输入 y 来确认，</p>
+
+<p>你可以使用 -f参数的 cp 命令来覆盖此行为，或者直接用 /bin/cp 命令。）</p>
+
+<p>若你想要一直运行，直到按下 CTRL+C 来停止，则运行下面命令：</p>
+
+<p><code class="language-plaintext highlighter-rouge">while true; do cp loadfile loadfile1; done</code></p>
+
+<h4 id="taskset-可以把进程绑定到指定cpu上">taskset 可以把进程绑定到指定CPU上</h4>
+
+<h3 id="shell文件解释器">shell文件解释器</h3>
+<p>#!/usr/bin/env bash #在不同的系统上提供了一些灵活性,但执行结果可能和bash有不同，比如pidof 查询不到执行的常驻脚本，但是ps就可以查到
+#！/bin/bash 
+#！/bin/sh 相当于开了POSIX模式的bash,运行的结果和bash可能有不同，比如当某行代码出错时，不继续往下解释,而bash会继续执行。</p>
+
+<p>结论：优先用/bin/bash</p>
+
+<p>卸载内核模块：rmmod  模块名
+加载内核模块： insmod  模块名</p>
+
+<p>dmesg 打印内核缓冲区内容，printk输出的内容就在这
+dmesg -c 每次打印后清空缓冲区</p>
+
+<h4 id="renice-调整优先级">renice 调整优先级</h4>
+<p>renice -n 10 -p PID
+-n 优先级范围-20 ~19 ，数值越低优先级越高</p>
+
+<h4 id="sh-xxxsh-或者xxxsh">sh xxx.sh 或者./xxx.sh</h4>
+<p>会起一个进程来执行命令，里面设置的环境变量啥的不会影响外面的环境。</p>
+
+<h4 id="子进程继承父进程的环境变量不继承父进程的自定义变量">子进程继承父进程的环境变量，不继承父进程的自定义变量。</h4>
+<p>因此在sh xxx.sh时只会继承环境变量，不会继承自定义变量
+而source xxx.sh不会另起进程，所以可以继承自定义变量</p>
+
+<h4 id="环境变量可以传递在不同的语言下都能用的变量">环境变量可以传递在不同的语言下都能用的变量</h4>
+<p>除了在shell下设置环境变量外，C库函数getenv和getenv可以设置获取环境变量</p>
+
+<h4 id="linux-fork时有cowcopy-on-write技术可以写时再拷贝">linux fork时有cow（Copy On Write）技术，可以写时再拷贝。</h4>
+
+<p>父进程和子进程一起运行，可以用于希望子进程异步的处理其他事物，而父进程按原计划运行。
+fork后wait，可以使父进程等待子进程退出后才退出，wait2可以返回子进程退出时的返回码，通过返回码可以实现进程间通信</p>
+
+<p>waitpid可以等待具体的子进程，waitpid2类似
+内核有避免竞争的机制，将退出的进程信息都放到队列里，父进程就算处理的慢，也可以按照进程退出的顺序处理子进程的进程信息</p>
+
+<p>但是如果父进程不发wait，信息就会一直在队列里存着，就会成为僵尸进程。所以可以用detach（pid）来起一个线程，专门wait这个子进程，实现子进程父进程分离</p>
+
+<p>看顾进程：master/worker模式，由主进程fork几个worker进程实际处理业务，主进程负责和worker通信，保证子进程可以保持响应。</p>
+
+<p>僵尸进程：子进程先结束了，但是父进程一直没有wait他，也就是没有读取子进程的返回码等信息，导致子进程虽然退出了，但是还有信息残留，死而未僵，所以叫僵尸进程。</p>
+
+<p>孤儿进程： 因父亲进程先退出而导致一个子进程被 init 进程收养的进程为孤儿进程，即孤儿进程的父亲更改为 init 进程，该进程在孤儿进程退出后回收它的内核空间资源</p>
+
+<p>父进程没有时间一直wait子进程退出，这时候可以用信号来实现，当子进程退出时，给父进程一个信号，父进程再wait就可以。但是当短时间内同一个信号来了很多次时，系统处理不过来，后面的几个信号会接不到，所以最好的办法是当第一个信号来时，就通过while循环不断wait，这时就要用非阻塞的wait。</p>
+
+<p>当进程接受到信号时，可以执行：1.忽略2.定制操作3.默认操作</p>
+
+<p><img src="/assets/images/signal1.PNG" alt="" /></p>
+
+<p>其中Term表示进程立即结束</p>
+
+<p>core表示进程立即结束，并进行核心转储</p>
+
+<p>ign表示忽略该信号</p>
+
+<p>stop表示进程暂停运行</p>
+
+<p>cont表示进程恢复运行</p>
+
+<p>USR1和USR2是用户自定义的信号</p>
+
+<h4 id="构造一个守护进程"><strong>构造一个守护进程</strong>：</h4>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">daemonize_app</span>
+    <span class="k">if</span> <span class="no">RUBY_VERSION</span> <span class="o">&lt;</span> <span class="s2">"1.9"</span>
+        <span class="nb">exit</span> <span class="k">if</span> <span class="nb">fork</span>
+        <span class="no">Process</span><span class="p">.</span><span class="nf">setsid</span>
+        <span class="nb">exit</span> <span class="k">if</span> <span class="nb">fork</span>
+        <span class="no">Dir</span><span class="p">.</span><span class="nf">chdir</span> <span class="s2">"/"</span>
+        <span class="no">STDIN</span><span class="p">.</span><span class="nf">reopen</span> <span class="s2">"/dev/null"</span>
+        <span class="no">STDOUT</span><span class="p">.</span><span class="nf">reopen</span> <span class="s2">"/dev/null"</span> <span class="p">,</span> <span class="s2">"a"</span>
+        <span class="no">STDERR</span><span class="p">.</span><span class="nf">reopen</span> <span class="s2">"/dev/null"</span> <span class="p">,</span> <span class="s2">"a"</span>
+    <span class="k">else</span>
+        <span class="no">Process</span><span class="p">.</span><span class="nf">daemon</span>
+    <span class="k">end</span>
+<span class="k">end</span>
+        
+</code></pre></div></div>
+
+<p>第一次fork父进程退出，进程成为孤儿进程</p>
+
+<p>process.setsid把子进程设为进程组长和会话组长，用于脱离父进程的控制，不会因为父进程的信号而终止。但是由于是会话组长，所以还是可能依附于一个终端</p>
+
+<p>第二次fork，又衍生一个子进程，这个子进程不是会话组长，所以也拜托了终端的限制，彻底成为没人管的守护进程。</p>
+
+<p>对一个会话组发的信号会发给会话内的所有进程组，进程组又会发给所有进程。</p>
+
+<p>C中的system函数的内部实现就是fork+exec</p>
+
+<p>先fork出来一个子进程再执行exec，exec函数会取代执行他的进程，一旦exec函数执行成功, 它就不会返回了, 进程结束.   但是如果exec函数执行失败, 它会返回失败的信息,  父进程可以wait来获取返回码。</p>
+
+<h4 id="查看centos版本"><strong>查看centos版本</strong></h4>
+
+<p>cat /etc/redhat-release</p>
+
+<h4 id="linux加载环境变量"><strong>linux加载环境变量</strong></h4>
+
+<p>临时生效可以export</p>
+
+<p>想要永久生效，要修改/etc/profile文件，或者在/etc/profile.d目录下，增加个脚本，里面加上export LIBRARY_PATH=libtest1:libtest2:$LIBRARY_PATH 类似的命令</p>
+
+<p>想要立即生效就source /etc/profile否则得等到再次登录时生效</p>
+
+<p>vim和vi是两套东西，vim是vi的改进版</p>
+
+<h4 id="vim使用的技巧"><strong>vim使用的技巧</strong>：</h4>
+
+<p>进到文件里之后输入：%d，再保存即可清空整个文件</p>
+
+<h4 id="linux-man命令分区"><strong>linux man命令分区</strong></h4>
+
+<p>想查哪个分区，就man 2 read</p>
+
+<p>1 用户命令， 可由任何人启动的。</p>
+
+<p>2 系统调用， 即由内核提供的函数。</p>
+
+<p>3 例程， 即库函数，比如标准C库libc。</p>
+
+<p>4 设备， 即/dev目录下的特殊文件。</p>
+
+<p>5 文件格式描述， 例如/etc/passwd。</p>
+
+<p>6 游戏， 不用解释啦！</p>
+
+<p>7 杂项， 例如宏命令包、惯例等。</p>
+
+<p>8 系统管理员工具， 只能由root启动。</p>
+
+<p>9 其他（Linux特定的）， 用来存放内核例行程序的文档。</p>
+
+<p>n 新文档， 可能要移到更适合的领域。</p>
+
+<h4 id="linux-c库函数的头文件都在usrinclude下"><strong>linux C库函数的头文件都在/usr/include下</strong></h4>
+
+<h4 id="linux设置系统时间"><strong>linux设置系统时间</strong>：</h4>
+
+<p>date -s “20210909 10:38:50”</p>
+
+<p>hwclock –systohc（同步系统时间到硬件）</p>
+
+<h4 id="text-file-busy"><strong>Text file busy</strong></h4>
+
+<p>发生此错误是因为当前文件已被占用，找出占用该文件的进程并杀死就可以了。</p>
+
+<p>使用到的命令如下：</p>
+
+<p>找出占用该文件的进程：</p>
+
+<p>fuser 文件名</p>
+
+<p>杀死占用该文件的进程</p>
+
+<p>kill -9 进程id</p>
+
+<h4 id="linux-软连接要用绝对路径">linux 软连接要用绝对路径</h4>
+
+<h4 id="arping可以ping-ip返回mac或者ping-mac返回ip">arping可以ping ip返回mac，或者ping mac返回IP</h4>
+
+<h4 id="设置dns服务器">设置dns服务器</h4>
+
+<p>在/etc/resolve.conf里添加类似这样的语句：</p>
+
+<p>nameserver 200.200.10.199即可</p>
+
+<h4 id="proclocks"><strong>/proc/locks</strong></h4>
+
+<p>保存当前被锁的inode节点</p>
+
+<h4 id="查看linux版本号"><strong>查看linux版本号</strong>：</h4>
+
+<p>uname -a</p>
+
+<p>或cat /proc/version</p>
+
+<h4 id="查看一个进程占用的物理内存"><strong>查看一个进程占用的物理内存</strong>：</h4>
+
+<p><code class="language-plaintext highlighter-rouge">cat /proc/13137/status |grep VmRSS</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">ps -aux |grep xxx</code></p>
+
+<h4 id="查看进程运行时间"><strong>查看进程运行时间</strong>：</h4>
+
+<p>1.<code class="language-plaintext highlighter-rouge">ps -eo pid,tty,user,comm,lstart,etime|grep xxx</code></p>
+
+<p>参数说明：</p>
+
+<p>pid：进程ID</p>
+
+<p>tty：终端</p>
+
+<p>user：用户</p>
+
+<p>comm：进程名</p>
+
+<p>lstart：开始时间</p>
+
+<p>etime：运行时间</p>
+
+<p>2.<code class="language-plaintext highlighter-rouge">ps -ef |grep xxx</code></p>
+
+<p>USER:用户名</p>
+
+<p>%CPU:进程占用的CPU百分比</p>
+
+<p>%MEM:占用内存的百分比</p>
+
+<p>VSZ:该进程使用的虚拟內存量（KB）</p>
+
+<p>RSS:该进程占用的固定內存量（KB）（驻留中页的数量）</p>
+
+<p>STAT:进程的状态</p>
+
+<p>START:该进程被触发启动时间</p>
+
+<p>TIME:该进程实际使用CPU运行的时间</p>
+
+<h4 id="利用strace可以查看进程相关的信息"><strong>利用strace可以查看进程相关的信息</strong></h4>
+
+<p>例如进程被谁杀了</p>
+
+<p>strace -T -tt -e trace=all -p pid</p>
+
+<h3 id="sshknown_hosts文件">~/.ssh/known_hosts文件</h3>
+
+<p>当A第一次通过ssh连接到B，B会将公钥传给A，存进known_hosts文件中。下次A再sshB时，B还会再传一个公钥给A，拿这个公钥和known_hosts中的公钥作对比，一样的话就验证通过，可以连接，否则不能连接。</p>
+
+<p>如果有验证失败的报错：Host key verification failed。有两种解决办法：</p>
+
+<p>1.手动把A中的known_hosts里记录B 的公钥删掉，然后再手动登录一次，生成正确的密钥，以后就可以直接登录了</p>
+
+<p>2.如果是自动化部署的话，可以设置配置文件，让ssh不做known_hosts的校验（安全性会降低）：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vi ~/.ssh/config      //编辑配置文件
+
+添加以下两行代码：
+StrictHostKeyChecking no 
+UserKnownHostsFile /dev/null
+</code></pre></div></div>]]></content><author><name>Lil bear</name></author><category term="linux" /><category term="linux" /><summary type="html"><![CDATA[看时间date 看时间戳 date +%s dnf 是centos的包管理工具 vi /etc/yum.repos.d/CentOS-AF.repo配置好源之后， 可以直接dnf install ls -lR|grep "^-"|wc -l 可以统计当前目录及子目录下所有文件的个数 **ls -lR** | grep "^d"| wc -l 可以统计当前目录及子目录下所有目录的个数 R表示递归，去掉R只统计当前目录 **ls -lrt** /tmp | wc -l 可以统计指定的目录 ps -efww|grep sendmail |grep -v grep|cut -c 9-15|xargs kill -9 杀掉同名进程sendmail 用scp远程传输文件: scp -P 22345 afwiki_hci.tar admin@10.154.105.100:/data/ rpm -qf /sfos/system/resource/lang/alarmd/alarmd.ini可以查安装包 lsof 可以看文件被谁引用，由于unix一切皆文件，所以也可以看端口被谁监听 lsof -n |grep 80 还可以看某个进程都打开了哪些文件： lsof -p pid netstat -anp也可以看端口监听情况 ps -auxf |grep dap可以看进程详细信息包括谁是谁的子进程等 添加定时脚本 Linux定时脚本是/etc/crontab这个脚本文件，linux每分钟都会调用这个这个脚本，执行其中的命令。 可以直接在这里面添加命令，如 * * * * * root /etc/init.d/smb restart 也可以添加脚本 * * * * *root test.sh 也可以像图片中那样，执行整个文件夹里的文件，用run-parts 命令即可 前面的定时时间设置也比较简单，参考给出的介绍即可。 需要注意的是 1.如果想固定的一个时间执行，比如9点，或星期六，那就再对应的位置直接填数字即可，如果是多个时间点，比如7点和9点，中间用逗号隔开写就行 2.如果是想表示每隔多少时间执行一次，比如每隔两天，可以在对应的位置用*/2表示 3.如果是想表示时间段，比如5点到9点，可以用5-9表示 Linux默认创建的文件都是文本文件，只是可读可写的（rw），并没有可执行的权限(x)，因此创建的脚本文件需要手动加权限 chmod 755 test.sh 为整个目录加权限 chmod -R 755 /data 数字代表的意思： r:4 可读 w:2 可写 x:1 可执行 ls -l 可以查看权限和修改时间，文件大小等详细信息 查看各磁盘分区情况： fdisk -l 下载对应网站的某个文件： curl -O 10.154.105.100:5000/opt/start_wiki.sh 启动服务： /etc/init.d/apache start 或者 service apache start 最新的linux使用了systemd这个守护进程来实现对服务的管理 命令：systemctl start apache 杀死一个进程： kill -9 pid 手动挂载磁盘后，要将挂载信息写入/etc/fstab中，否则下次开机挂载就没了： /dev/vg-data/lv-data /data ext4 defaults 0 0 数据库的命令，最后一定要加上分号; 表示这个命令的结束 往文件里写信息的命令： echo “10.154.105.100 dockerhub.sfos.org” » /etc/hosts &gt;&gt;表示追加到文件末尾 &gt;表示覆盖文件 Linux 解压zip文件命令： unzip test.zip /data/temp 统计目录下文件的大小： du -h –max-depth=1 /data &gt; /blackbox/docker_space_infors.txt -h 以k,m,g，t等格式显示 -m 以m的格式显示 -k 以k的格式显示 –max-depth =1 即统计当前目录下文件夹的大小 对文件按某一列排序： sort -h -k1 /blackbox/docker_space_infors.txt -o /blackbox/docker_space_infors.txt -h 按照k,m,g,t等格式排序 -n 按照数字排序 -k1 第一列 -o 输出文件的名字，可以为原文件，这样会把源文件覆盖掉 linux 缺省的运行级，RHS用到的级别如下： 0 - 停机 ，机器关闭。 1 - 单用户模式 。就像Win9x下的安全模式类似 2 - 多用户，但是没有NFS 进入无网络服务的多用户模式 3 - 完全多用户模式 ，是标准的运行级。 4 - 没有用到 ，一般不用，在一些特殊情况下可以用它来做一些事情。例如在笔记本 电脑的电池用尽时，可以切换到这个模式来 5 - X11 ，进到X Window系统了。 6 - 重新启动 ，运行init 6机器就会重启 linux开机后开启守护进程的过程 1.系统加电之后，首先进行的硬件自检，然后是bootloader对系统的初始化，加载内核。 2.启动内核，检测硬件，挂载根文件系统，初始化所有的设备驱动程序和数据结构 3.启动init进程，pid号为1 4.init进程根据/etc/inittab中的initdefault确定系统默认的运行级别 5.执行/etc/rc(n).d中的脚本，如果运行级别是3，那就执行/etc/rc3.d中的脚本 6./etc/rc(n).d中的脚本软连接到/etc/init.d中，S表示start,K 表示stop，是传给init.d的参数，后面的数字表示优先级,数值小的先执行，数值大的后执行。例如S01sysstat表示执行/etc/rc.d/init.d/sysstat start stat xxx 可以查看文件的访问时间 time xx.sh可以看该脚本的执行时间 C 内置库的头文件位置/usr/include/xxx.h 删除7天以上的文件 find . -maxdepth 1 ! -name “develop” -mtime +7 -exec rm -rf {} \; 指定pip源 pip install -i http://mirrors.xxxx.org/pypi/simple –trusted-host mirrors.xxxx.org requests_toolbelt 可以改后台密码 passwd admin vi模式粘贴乱缩进解决 :set paste 显示前5行后5行 head -n 5 tail -n 5 用法： head -n 5 test.txt 或 cat test.txt| head -n 5 获取随机数 cat /dev/urandom （快） cat /dev/random（慢） cat /dev/urandom | od -x 获取一行随机数，转为16进制 Linux系统下简单模拟高CPU\高内存\高负载的方法 CPU 下面命令会创建 CPU 负荷，方法是通过压缩随机数据并将结果发送到 /dev/null： cat /dev/urandom | gzip -9 &gt; /dev/null 如果你想要更大的负荷，或者系统有多个核，那么只需要对数据进行压缩和解压就行了，像这样： cat /dev/urandom | gzip -9 | gzip -d | gzip -9 | gzip -d &gt; /dev/null 按下 CTRL+C 来终止进程。 内存占用 下面命令会减少可用内存的总量。它是通过在内存中创建文件系统然后往里面写文件来实现的。你可以使用任意多的内存，只需要往里面写入更多的文件就行了。 首先，创建一个挂载点，然后将 ramfs 文件系统挂载上去： mkdir z mount -t ramfs ramfs z/ 第二步，使用 dd 在该目录下创建文件。这里我们创建了一个 128M 的文件： dd if=/dev/zero of=z/file bs=1M count=128 文件的大小可以通过下面这些操作符来修改： bs= 块大小。可以是任何数字后面接上 B（表示字节），K（表示 KB），M（ 表示 MB）或者 G（表示 GB）。 count= 要写多少个块。 磁盘 I/O 创建磁盘 I/O 的方法是先创建一个文件，然后使用 for 循环来不停地拷贝它。 下面使用命令 dd 创建了一个全是零的 1G 大小的文件： dd if=/dev/zero of=loadfile bs=1M count=1024 下面命令用 for 循环执行 10 次操作。每次都会拷贝 loadfile 来覆盖 loadfile1： for i in {1…10}; do cp loadfile loadfile1; done 通过修改 {1…10} 中的第二个参数来调整运行时间的长短。（LCTT 译注：你的 Linux 系统中的默认使用的 cp 命令很可能是 cp -i 的别名，这种情况下覆写会提示你输入 y 来确认， 你可以使用 -f参数的 cp 命令来覆盖此行为，或者直接用 /bin/cp 命令。） 若你想要一直运行，直到按下 CTRL+C 来停止，则运行下面命令： while true; do cp loadfile loadfile1; done taskset 可以把进程绑定到指定CPU上 shell文件解释器 #!/usr/bin/env bash #在不同的系统上提供了一些灵活性,但执行结果可能和bash有不同，比如pidof 查询不到执行的常驻脚本，但是ps就可以查到 #！/bin/bash #！/bin/sh 相当于开了POSIX模式的bash,运行的结果和bash可能有不同，比如当某行代码出错时，不继续往下解释,而bash会继续执行。 结论：优先用/bin/bash 卸载内核模块：rmmod 模块名 加载内核模块： insmod 模块名 dmesg 打印内核缓冲区内容，printk输出的内容就在这 dmesg -c 每次打印后清空缓冲区 renice 调整优先级 renice -n 10 -p PID -n 优先级范围-20 ~19 ，数值越低优先级越高 sh xxx.sh 或者./xxx.sh 会起一个进程来执行命令，里面设置的环境变量啥的不会影响外面的环境。 子进程继承父进程的环境变量，不继承父进程的自定义变量。 因此在sh xxx.sh时只会继承环境变量，不会继承自定义变量 而source xxx.sh不会另起进程，所以可以继承自定义变量 环境变量可以传递在不同的语言下都能用的变量 除了在shell下设置环境变量外，C库函数getenv和getenv可以设置获取环境变量 linux fork时有cow（Copy On Write）技术，可以写时再拷贝。 父进程和子进程一起运行，可以用于希望子进程异步的处理其他事物，而父进程按原计划运行。 fork后wait，可以使父进程等待子进程退出后才退出，wait2可以返回子进程退出时的返回码，通过返回码可以实现进程间通信 waitpid可以等待具体的子进程，waitpid2类似 内核有避免竞争的机制，将退出的进程信息都放到队列里，父进程就算处理的慢，也可以按照进程退出的顺序处理子进程的进程信息 但是如果父进程不发wait，信息就会一直在队列里存着，就会成为僵尸进程。所以可以用detach（pid）来起一个线程，专门wait这个子进程，实现子进程父进程分离 看顾进程：master/worker模式，由主进程fork几个worker进程实际处理业务，主进程负责和worker通信，保证子进程可以保持响应。 僵尸进程：子进程先结束了，但是父进程一直没有wait他，也就是没有读取子进程的返回码等信息，导致子进程虽然退出了，但是还有信息残留，死而未僵，所以叫僵尸进程。 孤儿进程： 因父亲进程先退出而导致一个子进程被 init 进程收养的进程为孤儿进程，即孤儿进程的父亲更改为 init 进程，该进程在孤儿进程退出后回收它的内核空间资源 父进程没有时间一直wait子进程退出，这时候可以用信号来实现，当子进程退出时，给父进程一个信号，父进程再wait就可以。但是当短时间内同一个信号来了很多次时，系统处理不过来，后面的几个信号会接不到，所以最好的办法是当第一个信号来时，就通过while循环不断wait，这时就要用非阻塞的wait。 当进程接受到信号时，可以执行：1.忽略2.定制操作3.默认操作 其中Term表示进程立即结束 core表示进程立即结束，并进行核心转储 ign表示忽略该信号 stop表示进程暂停运行 cont表示进程恢复运行 USR1和USR2是用户自定义的信号 构造一个守护进程： def daemonize_app if RUBY_VERSION &lt; "1.9" exit if fork Process.setsid exit if fork Dir.chdir "/" STDIN.reopen "/dev/null" STDOUT.reopen "/dev/null" , "a" STDERR.reopen "/dev/null" , "a" else Process.daemon end end 第一次fork父进程退出，进程成为孤儿进程 process.setsid把子进程设为进程组长和会话组长，用于脱离父进程的控制，不会因为父进程的信号而终止。但是由于是会话组长，所以还是可能依附于一个终端 第二次fork，又衍生一个子进程，这个子进程不是会话组长，所以也拜托了终端的限制，彻底成为没人管的守护进程。 对一个会话组发的信号会发给会话内的所有进程组，进程组又会发给所有进程。 C中的system函数的内部实现就是fork+exec 先fork出来一个子进程再执行exec，exec函数会取代执行他的进程，一旦exec函数执行成功, 它就不会返回了, 进程结束. 但是如果exec函数执行失败, 它会返回失败的信息, 父进程可以wait来获取返回码。 查看centos版本 cat /etc/redhat-release linux加载环境变量 临时生效可以export 想要永久生效，要修改/etc/profile文件，或者在/etc/profile.d目录下，增加个脚本，里面加上export LIBRARY_PATH=libtest1:libtest2:$LIBRARY_PATH 类似的命令 想要立即生效就source /etc/profile否则得等到再次登录时生效 vim和vi是两套东西，vim是vi的改进版 vim使用的技巧： 进到文件里之后输入：%d，再保存即可清空整个文件 linux man命令分区 想查哪个分区，就man 2 read 1 用户命令， 可由任何人启动的。 2 系统调用， 即由内核提供的函数。 3 例程， 即库函数，比如标准C库libc。 4 设备， 即/dev目录下的特殊文件。 5 文件格式描述， 例如/etc/passwd。 6 游戏， 不用解释啦！ 7 杂项， 例如宏命令包、惯例等。 8 系统管理员工具， 只能由root启动。 9 其他（Linux特定的）， 用来存放内核例行程序的文档。 n 新文档， 可能要移到更适合的领域。 linux C库函数的头文件都在/usr/include下 linux设置系统时间： date -s “20210909 10:38:50” hwclock –systohc（同步系统时间到硬件） Text file busy 发生此错误是因为当前文件已被占用，找出占用该文件的进程并杀死就可以了。 使用到的命令如下： 找出占用该文件的进程： fuser 文件名 杀死占用该文件的进程 kill -9 进程id linux 软连接要用绝对路径 arping可以ping ip返回mac，或者ping mac返回IP 设置dns服务器 在/etc/resolve.conf里添加类似这样的语句： nameserver 200.200.10.199即可 /proc/locks 保存当前被锁的inode节点 查看linux版本号： uname -a 或cat /proc/version 查看一个进程占用的物理内存： cat /proc/13137/status |grep VmRSS ps -aux |grep xxx 查看进程运行时间： 1.ps -eo pid,tty,user,comm,lstart,etime|grep xxx 参数说明： pid：进程ID tty：终端 user：用户 comm：进程名 lstart：开始时间 etime：运行时间 2.ps -ef |grep xxx USER:用户名 %CPU:进程占用的CPU百分比 %MEM:占用内存的百分比 VSZ:该进程使用的虚拟內存量（KB） RSS:该进程占用的固定內存量（KB）（驻留中页的数量） STAT:进程的状态 START:该进程被触发启动时间 TIME:该进程实际使用CPU运行的时间 利用strace可以查看进程相关的信息 例如进程被谁杀了 strace -T -tt -e trace=all -p pid ~/.ssh/known_hosts文件 当A第一次通过ssh连接到B，B会将公钥传给A，存进known_hosts文件中。下次A再sshB时，B还会再传一个公钥给A，拿这个公钥和known_hosts中的公钥作对比，一样的话就验证通过，可以连接，否则不能连接。 如果有验证失败的报错：Host key verification failed。有两种解决办法： 1.手动把A中的known_hosts里记录B 的公钥删掉，然后再手动登录一次，生成正确的密钥，以后就可以直接登录了 2.如果是自动化部署的话，可以设置配置文件，让ssh不做known_hosts的校验（安全性会降低）： vi ~/.ssh/config //编辑配置文件 添加以下两行代码： StrictHostKeyChecking no UserKnownHostsFile /dev/null]]></summary></entry><entry><title type="html">网络知识</title><link href="/jekyll-theme-yat/%E7%BD%91%E7%BB%9C/2022/07/14/network.html" rel="alternate" type="text/html" title="网络知识" /><published>2022-07-14T00:00:00+00:00</published><updated>2022-07-14T00:00:00+00:00</updated><id>/jekyll-theme-yat/%E7%BD%91%E7%BB%9C/2022/07/14/network</id><content type="html" xml:base="/jekyll-theme-yat/%E7%BD%91%E7%BB%9C/2022/07/14/network.html"><![CDATA[<p>linux添加网卡后，先通过 ip a show eth0，看一下是否添加成功</p>
+
+<p>然后通过ip link set dev eth0 up ，启动网卡。接下来就可以为网卡添加IP了。</p>
+
+<hr />
+
+<p>base64编码是用64个字符（如A,B,C,”,-等）表示二进制的一种编码</p>
+
+<p>url编码是字符的ASCII码的16进制，前面加上%，所以又称百分号编码。</p>
+
+<p>url中有可能是url编码，或者是base64编码。遇到url的问题，可以尝试解码看一下。</p>
+
+<p>\u的是base64编码</p>
+
+<hr />
+
+<p><strong>wireshark</strong>:</p>
+
+<p>过滤ip：ip.src==1.1.1.1</p>
+
+<p>​            ip.dst==2.2.2.2</p>
+
+<p>过滤协议，直接输协议就可以</p>
+
+<p>过滤长度，tcp.length==209</p>
+
+<p>过滤方法，http.request.method==”GET”</p>
+
+<p>过滤两种的时候，用and或&amp;&amp;连接</p>
+
+<hr />
+
+<p>查看监听端口号：
+netstat -nlp</p>
+
+<hr />
+
+<p><strong>添加临时ip</strong>：
+ip a add 192.165.1.1/24 dev eth0</p>
+
+<p><strong>添加永久ip</strong>：
+/etc/sysconfig/network-scripts路径下找到对应的网卡，然后添加ip即可。如果这个下面没有对应的网卡，则需要自己新建一个：</p>
+
+<p>1.使用nmcli con show命令，查看网卡ens19的UUID信息，记下UUID值</p>
+
+<p>2.使用ip addr命令查看网卡信息，记下ens19网卡的MAC地址</p>
+
+<p>3.将 /etc/sysconfig/network-scripts/目录中ifcfg-ens18文件复制一份，并命名为 ifcfg-ens19，重新修改配置文件，注意修改必要的硬件信息(可以加上永久mac)。</p>
+
+<p><strong>添加临时路由</strong>：
+r add default via 10.60.12.12 dev eth0 或 route add default gw 192.168.1.1 添加默认路由</p>
+
+<p>route add -net 22.22.22.0/24 gw 11.11.11.12 dev ens19 可以按网口添加路由</p>
+
+<p>route add -net 192.168.2.0/24 gw 192.168.2.254 添加普通路由</p>
+
+<p><strong>添加永久路由</strong>：</p>
+
+<p>vi /etc/rc.local 在这里把后台添加临时路由的操作写上就可以了</p>
+
+<hr />
+
+<h2 id="linux七层协议栈">linux七层协议栈</h2>
+
+<p><img src="/assets/images/network1.PNG" alt="" /></p>
+
+<p>协议栈的下三层提供了点到点的通信，即主机到主机的通信，不能准确到具体的程序或进程
+4层传输层，因为包含了端口号，所以可以实现端到端的通信，即具体的进程之间的通信。</p>
+
+<p>ip协议是尽力传输的网络协议，提供的服务是不可靠的无连接的，为了知道这个ip的数据包确实到了目的地，需要icmp提供的差错检测和报告机制。因此icmp是对ip协议的补充，也是网络层的协议，不是传输层协议。</p>
+
+<p>还有一个证明icmp协议是3层协议的地方，就是icmp没有端口号，所以只能提供点到点的通信</p>
+
+<p>三层头部中，有个protocol的字段，用来表示，4层采用什么协议，可以是UDP或TCP等4层协议，也可是ICMP，因为ICMP是基于IP协议的，这个比较特殊。</p>
+
+<p>3层头结构体：</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">iphdr</span> <span class="p">{</span>
+<span class="cp">#if defined(__LITTLE_ENDIAN_BITFIELD)
+</span>	<span class="n">__u8</span>	<span class="n">ihl</span><span class="o">:</span><span class="mi">4</span><span class="p">,</span> <span class="c1">//头部占了多少4字节，长度=ihl*4</span>
+		<span class="nl">version:</span><span class="mi">4</span><span class="p">;</span>
+<span class="cp">#elif defined (__BIG_ENDIAN_BITFIELD)
+</span>	<span class="n">__u8</span>	<span class="n">version</span><span class="o">:</span><span class="mi">4</span><span class="p">,</span>
+  		<span class="nl">ihl:</span><span class="mi">4</span><span class="p">;</span>     <span class="c1">//头部占了多少4字节，长度=ihl*4</span>
+<span class="cp">#else
+#error	"Please fix &lt;asm/byteorder.h&gt;"
+#endif
+</span>	<span class="n">__u8</span>	<span class="n">tos</span><span class="p">;</span>
+	<span class="n">__be16</span>	<span class="n">tot_len</span><span class="p">;</span>  <span class="c1">//ip报文总长度</span>
+	<span class="n">__be16</span>	<span class="n">id</span><span class="p">;</span>
+	<span class="n">__be16</span>	<span class="n">frag_off</span><span class="p">;</span>
+	<span class="n">__u8</span>	<span class="n">ttl</span><span class="p">;</span>
+	<span class="n">__u8</span>	<span class="n">protocol</span><span class="p">;</span>   <span class="c1">//4层协议</span>
+	<span class="n">__sum16</span>	<span class="n">check</span><span class="p">;</span>
+	<span class="n">__be32</span>	<span class="n">saddr</span><span class="p">;</span>
+	<span class="n">__be32</span>	<span class="n">daddr</span><span class="p">;</span>
+	<span class="cm">/*The options start here. */</span>
+<span class="p">};</span>
+
+</code></pre></div></div>]]></content><author><name>Lil bear</name></author><category term="网络" /><category term="网络" /><summary type="html"><![CDATA[linux添加网卡后，先通过 ip a show eth0，看一下是否添加成功 然后通过ip link set dev eth0 up ，启动网卡。接下来就可以为网卡添加IP了。 base64编码是用64个字符（如A,B,C,”,-等）表示二进制的一种编码 url编码是字符的ASCII码的16进制，前面加上%，所以又称百分号编码。 url中有可能是url编码，或者是base64编码。遇到url的问题，可以尝试解码看一下。 \u的是base64编码 wireshark: 过滤ip：ip.src==1.1.1.1 ​ ip.dst==2.2.2.2 过滤协议，直接输协议就可以 过滤长度，tcp.length==209 过滤方法，http.request.method==”GET” 过滤两种的时候，用and或&amp;&amp;连接 查看监听端口号： netstat -nlp 添加临时ip： ip a add 192.165.1.1/24 dev eth0 添加永久ip： /etc/sysconfig/network-scripts路径下找到对应的网卡，然后添加ip即可。如果这个下面没有对应的网卡，则需要自己新建一个： 1.使用nmcli con show命令，查看网卡ens19的UUID信息，记下UUID值 2.使用ip addr命令查看网卡信息，记下ens19网卡的MAC地址 3.将 /etc/sysconfig/network-scripts/目录中ifcfg-ens18文件复制一份，并命名为 ifcfg-ens19，重新修改配置文件，注意修改必要的硬件信息(可以加上永久mac)。 添加临时路由： r add default via 10.60.12.12 dev eth0 或 route add default gw 192.168.1.1 添加默认路由 route add -net 22.22.22.0/24 gw 11.11.11.12 dev ens19 可以按网口添加路由 route add -net 192.168.2.0/24 gw 192.168.2.254 添加普通路由 添加永久路由： vi /etc/rc.local 在这里把后台添加临时路由的操作写上就可以了 linux七层协议栈 协议栈的下三层提供了点到点的通信，即主机到主机的通信，不能准确到具体的程序或进程 4层传输层，因为包含了端口号，所以可以实现端到端的通信，即具体的进程之间的通信。 ip协议是尽力传输的网络协议，提供的服务是不可靠的无连接的，为了知道这个ip的数据包确实到了目的地，需要icmp提供的差错检测和报告机制。因此icmp是对ip协议的补充，也是网络层的协议，不是传输层协议。 还有一个证明icmp协议是3层协议的地方，就是icmp没有端口号，所以只能提供点到点的通信 三层头部中，有个protocol的字段，用来表示，4层采用什么协议，可以是UDP或TCP等4层协议，也可是ICMP，因为ICMP是基于IP协议的，这个比较特殊。 3层头结构体： struct iphdr { #if defined(__LITTLE_ENDIAN_BITFIELD) __u8 ihl:4, //头部占了多少4字节，长度=ihl*4 version:4; #elif defined (__BIG_ENDIAN_BITFIELD) __u8 version:4, ihl:4; //头部占了多少4字节，长度=ihl*4 #else #error "Please fix &lt;asm/byteorder.h&gt;" #endif __u8 tos; __be16 tot_len; //ip报文总长度 __be16 id; __be16 frag_off; __u8 ttl; __u8 protocol; //4层协议 __sum16 check; __be32 saddr; __be32 daddr; /*The options start here. */ };]]></summary></entry><entry><title type="html">PHP知识</title><link href="/jekyll-theme-yat/php/2022/07/14/php.html" rel="alternate" type="text/html" title="PHP知识" /><published>2022-07-14T00:00:00+00:00</published><updated>2022-07-14T00:00:00+00:00</updated><id>/jekyll-theme-yat/php/2022/07/14/php</id><content type="html" xml:base="/jekyll-theme-yat/php/2022/07/14/php.html"><![CDATA[<h3 id="php字符串拼接">php字符串拼接</h3>
+<p>直接两个字符串中间加个.即可，如
+$handle = fopen(AF_SYSINFO_DIR.’/appversion’, ‘r’);</p>
+
+<h3 id="php打日志到文件">php打日志到文件</h3>
+<p>把第二参数的字符串打印到第一个参数的文件里,加上FILE_APPEND参数后可以追加写，不覆盖。
+file_put_contents(“/tmp/test.txt”,”Runoob”);
+file_put_contents($file, $site, FILE_APPEND);</p>
+
+<h3 id="表示完全相等两端数据类型必须也一致-表示不完全相等数据类型不一致的话会强制转换再比较">===表示完全相等，两端数据类型必须也一致， ==表示不完全相等，数据类型不一致的话会强制转换再比较。</h3>
+
+<h3 id="变量">变量</h3>
+<p>定义和使用变量都得前面加$
+如$cfg_file = escapeshellarg($cfg_file);</p>
+
+<p>php各个特殊的变量的值及比较结果：</p>
+
+<p><img src="/assets/images/php1.PNG" alt="" /></p>
+
+<p><img src="/assets/images/php2.PNG" alt="" /></p>
+
+<p><img src="/assets/images/php3.PNG" alt="" /></p>
+
+<p><img src="/assets/images/php4.PNG" alt="" /></p>]]></content><author><name>Lil bear</name></author><category term="PHP" /><category term="PHP" /><summary type="html"><![CDATA[php字符串拼接 直接两个字符串中间加个.即可，如 $handle = fopen(AF_SYSINFO_DIR.’/appversion’, ‘r’);]]></summary></entry><entry><title type="html">git用法</title><link href="/jekyll-theme-yat/git/2022/07/13/git%E7%94%A8%E6%B3%95.html" rel="alternate" type="text/html" title="git用法" /><published>2022-07-13T00:00:00+00:00</published><updated>2022-07-13T00:00:00+00:00</updated><id>/jekyll-theme-yat/git/2022/07/13/git%E7%94%A8%E6%B3%95</id><content type="html" xml:base="/jekyll-theme-yat/git/2022/07/13/git%E7%94%A8%E6%B3%95.html"><![CDATA[<h2 id="git的一些术语">git的一些术语</h2>
+
+<p>工作区：所有你能看到的文件都在工作区。包括git add后的文件。</p>
+
+<p>暂存区:git add后的文件</p>
+
+<p>文件从在远端仓库没有了， 但是本地还没有更新，所以还有这个文件，这时git pull origin不会把这个文件删掉，只能git reset –hard， git clean -fxd，才能确保和远端完全一致。</p>
+
+<h2 id="git-的一些命令">git 的一些命令</h2>
+
+<p><strong>git log</strong> a.jsp 可以看某个文件的提交历史
+git reset bec15445 a.jsp 可以回退文件到某次提交</p>
+
+<p><strong>删除本地分支</strong>
+<code class="language-plaintext highlighter-rouge">git branch -d BranchName</code></p>
+
+<p>强制删除：<code class="language-plaintext highlighter-rouge">git branch -D xxx</code></p>
+
+<p><strong>删除远端分支</strong>
+git branch -a 可以看到远端分支
+git push origin –delete BranchName
+可以删掉远端分支，注意，branchname是分支名，不用加remote/origin这些</p>
+
+<p><strong>git commit –amend</strong> 可以修改上次的提交，不产生新的提交</p>
+
+<p>也可以 <strong>git commit –amend -m “xxx”</strong>，修改上次提交（相当于简易版rebase，只能用于修改一次提交）。</p>
+
+<p>amend之后记得push的时候要加上-f参数，把远端的提交覆盖掉</p>
+
+<p><strong>git reset</strong> xxx.c 可以把add过的文件恢复成未add的状态</p>
+
+<p><strong>git reset</strong> 13a5518637859b097eaf08c306e2660d82b41204 可以回到某次提交，重置暂存区，保留工作区的文件</p>
+
+<p><strong>git reset</strong> –hard  13a5518637859b097eaf08c306e2660d82b41204 暂存区和工作区都清空</p>
+
+<p><strong>git stash</strong> 可以把工作区的内容缓存起来放到栈里，通过git stash pop来释放出来。可以通过git stash show来开栈里的文件</p>
+
+<p>通常的使用场景是：</p>
+
+<p>1.我在分支A开发，突然有了其他的任务，需要在分支B开发，这时我不想把分支A的修改commit，再切到B，因为会产生一次无意义的提交。这时就可以git stash先把修改缓存起来。在B分支忙完了之后，再切回A分支，git stash pop，就可以了。</p>
+
+<p>2.我在分支A开发，改了一些东西之后想rebase一下，但是不想rebase我现在修改的东西，只想rebase已提交的东西，这时就可以git stash，然后rebase完了之后再git stash pop。</p>
+
+<h2 id="git-rebase用法">git rebase用法</h2>
+
+<p>git log 查看提交记录</p>
+
+<p><img src="/assets/images/rebase1.PNG" alt="" /></p>
+
+<p>如果我们的目标是把最近三次的提交记录合并成一个，那就以第四次的提交作为基线：</p>
+
+<p>git rebase -i  d4f92183a326ba1d1424093e48d30ec55ad3fcb8</p>
+
+<p><img src="/assets/images/rebase2.PNG" alt="" /></p>
+
+<p>看到这个界面，几个常用的选项：</p>
+
+<p>p 表示保留这次提交，并且用这个提交信息</p>
+
+<p>r 表示保留这次提交，但是修改这个提交信息</p>
+
+<p>s 保留这次提交，但是合并进上次提交中</p>
+
+<p>根据我们的需求，做如下修改</p>
+
+<p><img src="/assets/images/rebase_new1.PNG" alt="" /></p>
+
+<p>输入wq之后会出现这个界面</p>
+
+<p><img src="/assets/images/rebase_new2.PNG" alt="" /></p>
+
+<p>让你修改提交信息，如果你上一步选择的不是“r”,而是“p”则不会跳出来这个界面。我们修改提交信息为</p>
+
+<p><img src="/assets/images/rebase_new3.PNG" alt="" /></p>
+
+<p>再wq，会弹出确认的界面：</p>
+
+<p><img src="/assets/images/rebase_new4.PNG" alt="" /></p>
+
+<p>我们把不需要的提交给注释掉：</p>
+
+<p><img src="/assets/images/rebase_new5.PNG" alt="" /></p>
+
+<p>再wq，rebase就完成了。</p>
+
+<p>可以再git log 看一下效果</p>
+
+<p><img src="/assets/images/rebase_new6.PNG" alt="" /></p>
+
+<p>前三次已经变成了一个提交。</p>
+
+<h3 id="rebase的回退">rebase的回退</h3>
+
+<p>git rebase的过程中可以通过git rebase –abort来取消rebase</p>
+
+<p>如果rebase已经成功了，则可以先git reflog看一下所有提交记录（包括rebase的过程），找到rebase操作前的一次提交，</p>
+
+<p>git reset –hard xxx就可以了。</p>
+
+<h3 id="无法使用rebase的场景">无法使用rebase的场景</h3>
+
+<p>有些场景无法用git rebase：比如在分支上提交了几次修改之后，又merge了别人的分支进来。这时如果git rebase提交就会乱掉。</p>
+
+<p>比如我基于master 拉了一个分支A，同时别人拉一个分支B出来。</p>
+
+<p>然后我在分支A上提交了几次，又把B merge了进来，这时再对A进行rebase就会导致提交乱掉。</p>
+
+<p>解决办法：</p>
+
+<p>从master拉一个分支C，然后执行：</p>
+
+<p><code class="language-plaintext highlighter-rouge">git  merge --squash origin/A</code>（这个操作是把A merge到C，同时抹去A的所有提交。）</p>
+
+<p>然后再<code class="language-plaintext highlighter-rouge">git commit -m "xxx"</code>写上自己的提交就行了，这时所有的提交就都变成了一个，而且包含了B的改动。</p>]]></content><author><name>Lil bear</name></author><category term="git" /><category term="git" /><summary type="html"><![CDATA[git的一些术语 工作区：所有你能看到的文件都在工作区。包括git add后的文件。 暂存区:git add后的文件 文件从在远端仓库没有了， 但是本地还没有更新，所以还有这个文件，这时git pull origin不会把这个文件删掉，只能git reset –hard， git clean -fxd，才能确保和远端完全一致。 git 的一些命令 git log a.jsp 可以看某个文件的提交历史 git reset bec15445 a.jsp 可以回退文件到某次提交 删除本地分支 git branch -d BranchName 强制删除：git branch -D xxx 删除远端分支 git branch -a 可以看到远端分支 git push origin –delete BranchName 可以删掉远端分支，注意，branchname是分支名，不用加remote/origin这些 git commit –amend 可以修改上次的提交，不产生新的提交 也可以 git commit –amend -m “xxx”，修改上次提交（相当于简易版rebase，只能用于修改一次提交）。 amend之后记得push的时候要加上-f参数，把远端的提交覆盖掉 git reset xxx.c 可以把add过的文件恢复成未add的状态 git reset 13a5518637859b097eaf08c306e2660d82b41204 可以回到某次提交，重置暂存区，保留工作区的文件 git reset –hard 13a5518637859b097eaf08c306e2660d82b41204 暂存区和工作区都清空 git stash 可以把工作区的内容缓存起来放到栈里，通过git stash pop来释放出来。可以通过git stash show来开栈里的文件 通常的使用场景是： 1.我在分支A开发，突然有了其他的任务，需要在分支B开发，这时我不想把分支A的修改commit，再切到B，因为会产生一次无意义的提交。这时就可以git stash先把修改缓存起来。在B分支忙完了之后，再切回A分支，git stash pop，就可以了。 2.我在分支A开发，改了一些东西之后想rebase一下，但是不想rebase我现在修改的东西，只想rebase已提交的东西，这时就可以git stash，然后rebase完了之后再git stash pop。 git rebase用法 git log 查看提交记录 如果我们的目标是把最近三次的提交记录合并成一个，那就以第四次的提交作为基线： git rebase -i d4f92183a326ba1d1424093e48d30ec55ad3fcb8 看到这个界面，几个常用的选项： p 表示保留这次提交，并且用这个提交信息 r 表示保留这次提交，但是修改这个提交信息 s 保留这次提交，但是合并进上次提交中 根据我们的需求，做如下修改 输入wq之后会出现这个界面 让你修改提交信息，如果你上一步选择的不是“r”,而是“p”则不会跳出来这个界面。我们修改提交信息为 再wq，会弹出确认的界面： 我们把不需要的提交给注释掉： 再wq，rebase就完成了。 可以再git log 看一下效果 前三次已经变成了一个提交。 rebase的回退 git rebase的过程中可以通过git rebase –abort来取消rebase 如果rebase已经成功了，则可以先git reflog看一下所有提交记录（包括rebase的过程），找到rebase操作前的一次提交， git reset –hard xxx就可以了。 无法使用rebase的场景 有些场景无法用git rebase：比如在分支上提交了几次修改之后，又merge了别人的分支进来。这时如果git rebase提交就会乱掉。 比如我基于master 拉了一个分支A，同时别人拉一个分支B出来。 然后我在分支A上提交了几次，又把B merge了进来，这时再对A进行rebase就会导致提交乱掉。 解决办法： 从master拉一个分支C，然后执行： git merge --squash origin/A（这个操作是把A merge到C，同时抹去A的所有提交。） 然后再git commit -m "xxx"写上自己的提交就行了，这时所有的提交就都变成了一个，而且包含了B的改动。]]></summary></entry><entry><title type="html">编译相关知识</title><link href="/jekyll-theme-yat/%E7%BC%96%E8%AF%91/2022/07/13/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86.html" rel="alternate" type="text/html" title="编译相关知识" /><published>2022-07-13T00:00:00+00:00</published><updated>2022-07-13T00:00:00+00:00</updated><id>/jekyll-theme-yat/%E7%BC%96%E8%AF%91/2022/07/13/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86</id><content type="html" xml:base="/jekyll-theme-yat/%E7%BC%96%E8%AF%91/2022/07/13/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86.html"><![CDATA[<p>如果编译时遇到 undefine reference to symbol xxx，表示找不到这个符号，编译时-l链接上这个库就行了</p>
+
+<p>ldd +编译出来的文件，就可以看该文件链接的动态库</p>
+
+<p>静态目标文件.o文件，编译时就把内容加到可执行文件里</p>
+
+<p>第二次编译时，如果makefile里写的依赖的文件变的话，会重新编译，否则不会重新编译。通常是不会把.h文件写到makefile的依赖里的，如果改完之后直接make可能不会重新编，所以最好的办法是make clean再make</p>
+
+<h2 id="makefile-相关知识">Makefile 相关知识</h2>
+
+<p>参考<a href="https://blog.csdn.net/weixin_38391755/article/details/80380786">makefile详解</a></p>
+
+<p>makefile中，冒号前的默认为文件，冒号后为这个文件的依赖，下一行为更新这个文件需要执行的命令
+如果我们只是想执行某些操作，比如clean时删除编译出来的文件，可以把这个clean前加上.PHONY : clean，表示它是个伪文件</p>
+
+<p><img src="/assets/images/4.PNG" alt="" /></p>
+
+<p>如果不加这个命令，那么如果当前路径下存在一个叫clean的文件，我们再执行make clean就会报错</p>
+
+<p>常用函数：
+格式：$(patsubst &lt;pattern&gt;,&lt;replacement&gt;,&lt;text&gt; )
+名称：模式字符串替换函数——patsubst。
+功能：查找&lt;text&gt;中的单词（单词以“空格”、“Tab”或“回车”“换行”分隔）是否符合模式&lt;pattern&gt;，如果匹配的话，则以&lt;replacement&gt;替换。</p>
+
+<p>这里，&lt;pattern&gt;可以包括通配符“%”，表示任意长度的字串。如果&lt;replacement&gt;中也包含“%”，那么，&lt;replacement&gt;中的这个“%”将是&lt;pattern&gt;中的那个“%”所代表的字串。</p>
+
+<p>（可以用“\”来转义，以“%”来表示真实含义的“%”字符）
+返回：函数返回被替换过后的字符串。</p>
+
+<p>示例：</p>
+
+<p><code class="language-plaintext highlighter-rouge">$(patsubst %.c,%.o, a.c b.c)</code></p>
+
+<p>把字串“a.c b.c”符合模式[%.c]的单词替换成[%.o]，返回结果是“a.o b.o”</p>
+
+<h2 id="so嵌套引用的情况">so嵌套引用的情况：</h2>
+
+<p><img src="/assets/images/5.PNG" alt="" /></p>
+
+<p>3.so用到了2.so中的函数，2.so用到了1.so中的函数</p>
+
+<p>2.so引用了1.h，但是编译时未链接1.so。这样就可以编译过的，但是2.so的符号表不完整。
+3.so想用2.so中的函数时，直接包含2.h，但是不链接2.so，也是可以编译过的，这时3.so的符号表也不完整。任何想链接3.so的<strong>可执行程序</strong>编译时一链接3.so就会报错，说缺少2.so和1.so中的符号。</p>
+
+<p>必须在编译时同时链接上1.so和2.so，即把不完整的符号表补齐才行。</p>
+
+<p>补齐符号表，也可以链接静态库，如下所示</p>
+
+<p><img src="/assets/images/6.PNG" alt="" /></p>
+
+<p>b.so 用到了c.c中的函数，但是只引用了c.h,在链接时并未链接c.a，此时b.so中的符号表是不完整的，用到的c.h中的函数只能看到一个声明，看不到具体的实现。如果是一个<strong>可执行程序</strong>链接b.so时，必须把c.c包含进去，不论是直接链接c.c对应的c.o，或者是链接打包成的c.a(可能有其他的.o被打包进来，如果只用到c.c中的文件的话，建议直接用c.o)。 此处画的a.so则不用补齐符号表。</p>
+
+<p>总结：如果一个so的符号表不完整，可以编译过，但是该so不能再被其他<strong>可执行程序</strong>链接（但是可以被其他的so链接，只要最终用到这个so的<strong>可执行程序</strong>把符号表补齐就可以了），必须把不完整的符号表补充完整，即把缺少的符号的源文件包含进来。包含进来的方式可以直接链接目标文件.o，或链接库文件.a，.so。</p>
+
+<p>makefile的<strong>MAKEFILE_LIST</strong>变量，是个列表变量, 在每次make读入一个makefile文件时, 都把它添加到最后一项，
+可以通过</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>makefile_name := $(lastword $(MAKEFILE_LIST))
+makefile_path := $(abspath $(makefile_name))
+</code></pre></div></div>
+
+<p>来获取当前的makefile的绝对路径</p>
+
+<p>一个a.c或想<strong>引用另外一个b.c中定义的函数</strong>，有两种方式：</p>
+
+<p>1.b.c在头文件b.h中声明一下这个函数，a.c只要include这个b.h就可以用到这个函数。</p>
+
+<p>2.a.c直接extern声明b.c中的函数，就可以用了。</p>
+
+<p>当然，这两种方式都必须能找到函数的定义，所以要不就编译时一起编进来例如，<code class="language-plaintext highlighter-rouge">gcc a.c b.c -o</code></p>
+
+<p>,或编译时a.c在编译时引用静态库b.a；要么就引用动态库。</p>
+
+<p>总的来说这两种方式是一种，就是说我想用别的文件定义的函数之前，一定要声明一下这个函数（在能找到定义的情况下），不论是通过include头文件中的声明，或者是直接extern来声明。</p>]]></content><author><name>Lil bear</name></author><category term="编译" /><category term="编译" /><category term="makefile" /><summary type="html"><![CDATA[如果编译时遇到 undefine reference to symbol xxx，表示找不到这个符号，编译时-l链接上这个库就行了 ldd +编译出来的文件，就可以看该文件链接的动态库 静态目标文件.o文件，编译时就把内容加到可执行文件里 第二次编译时，如果makefile里写的依赖的文件变的话，会重新编译，否则不会重新编译。通常是不会把.h文件写到makefile的依赖里的，如果改完之后直接make可能不会重新编，所以最好的办法是make clean再make Makefile 相关知识 参考makefile详解 makefile中，冒号前的默认为文件，冒号后为这个文件的依赖，下一行为更新这个文件需要执行的命令 如果我们只是想执行某些操作，比如clean时删除编译出来的文件，可以把这个clean前加上.PHONY : clean，表示它是个伪文件 如果不加这个命令，那么如果当前路径下存在一个叫clean的文件，我们再执行make clean就会报错 常用函数： 格式：$(patsubst &lt;pattern&gt;,&lt;replacement&gt;,&lt;text&gt; ) 名称：模式字符串替换函数——patsubst。 功能：查找&lt;text&gt;中的单词（单词以“空格”、“Tab”或“回车”“换行”分隔）是否符合模式&lt;pattern&gt;，如果匹配的话，则以&lt;replacement&gt;替换。 这里，&lt;pattern&gt;可以包括通配符“%”，表示任意长度的字串。如果&lt;replacement&gt;中也包含“%”，那么，&lt;replacement&gt;中的这个“%”将是&lt;pattern&gt;中的那个“%”所代表的字串。 （可以用“\”来转义，以“%”来表示真实含义的“%”字符） 返回：函数返回被替换过后的字符串。 示例： $(patsubst %.c,%.o, a.c b.c) 把字串“a.c b.c”符合模式[%.c]的单词替换成[%.o]，返回结果是“a.o b.o” so嵌套引用的情况： 3.so用到了2.so中的函数，2.so用到了1.so中的函数 2.so引用了1.h，但是编译时未链接1.so。这样就可以编译过的，但是2.so的符号表不完整。 3.so想用2.so中的函数时，直接包含2.h，但是不链接2.so，也是可以编译过的，这时3.so的符号表也不完整。任何想链接3.so的可执行程序编译时一链接3.so就会报错，说缺少2.so和1.so中的符号。 必须在编译时同时链接上1.so和2.so，即把不完整的符号表补齐才行。 补齐符号表，也可以链接静态库，如下所示 b.so 用到了c.c中的函数，但是只引用了c.h,在链接时并未链接c.a，此时b.so中的符号表是不完整的，用到的c.h中的函数只能看到一个声明，看不到具体的实现。如果是一个可执行程序链接b.so时，必须把c.c包含进去，不论是直接链接c.c对应的c.o，或者是链接打包成的c.a(可能有其他的.o被打包进来，如果只用到c.c中的文件的话，建议直接用c.o)。 此处画的a.so则不用补齐符号表。 总结：如果一个so的符号表不完整，可以编译过，但是该so不能再被其他可执行程序链接（但是可以被其他的so链接，只要最终用到这个so的可执行程序把符号表补齐就可以了），必须把不完整的符号表补充完整，即把缺少的符号的源文件包含进来。包含进来的方式可以直接链接目标文件.o，或链接库文件.a，.so。 makefile的MAKEFILE_LIST变量，是个列表变量, 在每次make读入一个makefile文件时, 都把它添加到最后一项， 可以通过 makefile_name := $(lastword $(MAKEFILE_LIST)) makefile_path := $(abspath $(makefile_name)) 来获取当前的makefile的绝对路径 一个a.c或想引用另外一个b.c中定义的函数，有两种方式： 1.b.c在头文件b.h中声明一下这个函数，a.c只要include这个b.h就可以用到这个函数。 2.a.c直接extern声明b.c中的函数，就可以用了。 当然，这两种方式都必须能找到函数的定义，所以要不就编译时一起编进来例如，gcc a.c b.c -o ,或编译时a.c在编译时引用静态库b.a；要么就引用动态库。 总的来说这两种方式是一种，就是说我想用别的文件定义的函数之前，一定要声明一下这个函数（在能找到定义的情况下），不论是通过include头文件中的声明，或者是直接extern来声明。]]></summary></entry><entry><title type="html">C语言基础知识</title><link href="/jekyll-theme-yat/c%E8%AF%AD%E8%A8%80/2022/07/12/C%E8%AF%AD%E8%A8%80%E9%80%9A%E7%94%A8%E7%9F%A5%E8%AF%86.html" rel="alternate" type="text/html" title="C语言基础知识" /><published>2022-07-12T00:00:00+00:00</published><updated>2022-07-12T00:00:00+00:00</updated><id>/jekyll-theme-yat/c%E8%AF%AD%E8%A8%80/2022/07/12/C%E8%AF%AD%E8%A8%80%E9%80%9A%E7%94%A8%E7%9F%A5%E8%AF%86</id><content type="html" xml:base="/jekyll-theme-yat/c%E8%AF%AD%E8%A8%80/2022/07/12/C%E8%AF%AD%E8%A8%80%E9%80%9A%E7%94%A8%E7%9F%A5%E8%AF%86.html"><![CDATA[<h2 id="malloc_trim函数">malloc_trim()函数</h2>
+
+<p>介绍这个函数之前首先需要介绍一下，操作系统内存分配的一些知识。</p>
+
+<p>一个程序会通过malloc等函数从操作系统申请内存，放在堆上，然后通过free来释放内存。但是实际上操作系统会做个骚操作，当程序用了free之后，也不会立马把内存收走，因为他预判你以后可能还会用，如果收走了再分配很消耗性能，所以他有时候会偷偷留着一部分内存。</p>
+
+<p>这时我们就需要用到malloc_trim()函数来告诉操作系统，我确实需要你释放内存，不要保留了。</p>
+
+<p>通常的用法是malloc_trim(0)，表示操作系统，能释放就尽量释放吧。</p>
+
+<p>详细的用法参考：<a href="https://linux.die.net/man/3/malloc_trim">malloc_trim</a></p>
+
+<p>static和全局变量详解：</p>
+
+<p>生存周期：从程序开始到程序结束。</p>
+
+<p>初始化：</p>
+
+<p>C和C++不同</p>
+
+<p>C:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>全局变量</th>
+      <th>文件域的静态变量</th>
+      <th>局部静态变量</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>初始化</td>
+      <td>编译时</td>
+      <td>编译时</td>
+      <td>编译时</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>C语言的<a href="https://so.csdn.net/so/search?q=静态变量&amp;spm=1001.2101.3001.7020">静态变量</a>的初始值都是在编译完成后，就会保存在编译生成的可执行文件中。所以，初始值在编译时就要计算出来，因此C语言之中无法使用变量对静态变量进行初始化，即以下写法是无法编译通过的：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>int a = 10;
+int b = a;
+int main()
+{
+
+}
+</code></pre></div></div>
+
+<p>C++:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>全局变量</th>
+      <th>文件域的静态变量</th>
+      <th>类的静态成员变量</th>
+      <th>静态局部变量</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>初始化</td>
+      <td>main执行前</td>
+      <td>main执行前</td>
+      <td>main执行前</td>
+      <td>首次执行相关代码时</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>main执行前是指：</p>
+
+<p>全局变量、文件域的静态变量和类的静态成员变量在main执行之前的<strong>静态初始化过程</strong>中分配内存并初始化；静态局部变量（一般为函数内的静态变量）在第一次使用时分配内存并初始化。这里的变量包含内置数据类型和自定义类型的对象</p>
+
+<p>静态初始化是指：</p>
+
+<p>从语言的层面来说，全局变量的初始化可以划分为以下两个阶段：</p>
+
+<p>static initialization: <strong>静态初始化指的是用常量来对变量进行初始化</strong>,主要包括 zero initialization 和 const initialization，静态初始化在程序加载的过程中完成，对简单类型(内建类型，POD等)来说，从具体实现上看，zero initialization 的变量会被保存在 bss 段，const initialization 的变量则放在 data 段内，程序加载即可完成初始化，这和 c 语言里的全局变量初始化基本是一致的。</p>
+
+<p>dynamic initialization：<strong>动态初始化主要是指需要经过函数调用才能完成的初始化</strong>，比如说：int a = foo()，或者是复杂类型（类）的初始化（需要调用构造函数）等。这些变量的初始化会在 main 函数执行前由运行时调用相应的代码从而得以进行(静态局部变量除外)。这里没太懂啥时候会动态初始化</p>
+
+<p>so1链接了so2，so2也可以使用so1中的符号</p>
+
+<p>因为插件其实也是一个so，插件1加载了插件2，也就是2是1的子插件，2也可以随便用1中的符号。所以子插件可以用父插件中的符号。</p>
+
+<p>c++编译后会把函数名变成类似这样的_ZN6CRwIni9GetStringEPKcS1<em>PciS1</em>，可以通过<code class="language-plaintext highlighter-rouge">c++filter ZN6CRwIni9GetStringEPKcS1_PciS1</code>命令看到具体是哪个函数。</p>
+
+<p>也可以ldd -r xxx.so来看so链接的情况，以及这个so中有哪些符号未定义</p>
+
+<p>全局变量或函数是否能放到头文件中定义：</p>
+
+<p>1.全局变量不能 。全局变量必须全局唯一，因为多个cpp都会包含这个头文件，导致一个有多个地方定义这个变量，编译时会报重定义的错误</p>
+
+<p>2.static静态变量根据情况而定。只能在当前文件中可见，所以放到头文件中之后，任何包含这个头文件的cpp都会定义一次这个静态变量。如果这是你要的效果的话倒可以放到头文件里。</p>]]></content><author><name>Lil bear</name></author><category term="C语言" /><category term="C语言" /><summary type="html"><![CDATA[malloc_trim()函数]]></summary></entry><entry><title type="html">C语言程序使用so</title><link href="/jekyll-theme-yat/c%E8%AF%AD%E8%A8%80/2022/07/12/so%E5%8A%A0%E8%BD%BD.html" rel="alternate" type="text/html" title="C语言程序使用so" /><published>2022-07-12T00:00:00+00:00</published><updated>2022-07-12T00:00:00+00:00</updated><id>/jekyll-theme-yat/c%E8%AF%AD%E8%A8%80/2022/07/12/so%E5%8A%A0%E8%BD%BD</id><content type="html" xml:base="/jekyll-theme-yat/c%E8%AF%AD%E8%A8%80/2022/07/12/so%E5%8A%A0%E8%BD%BD.html"><![CDATA[<h2 id="生成动态链接库so文件">生成动态链接库(so文件)</h2>
+
+<p>gcc 编译时加上-shared选项，表示创建动态链接库，该库在运行时才会加载，而非编译时加载。
+编译时还得配合 -fPIC选项，告诉编译器产生与位置无关代码（Position-Independent Code），这时产生的代码中就没有绝对地址了，全部使用相对地址，所以代码可以被加载器加载到内存的任意位置，都可以正确的执行。这正是共享库所要求的，共享库被加载时，在内存的位置不是固定的。
+例如：
+gcc -g -fPIC -Wall -shared pcap_api.c -o libpcap_api.so 编译出来so</p>
+
+<h2 id="使用so的两种方式">使用so的两种方式</h2>
+
+<p>有两种方式可以使用一个so。一个是编译的时候直接链接上，然后执行的时候再调用。第二种是编译时不链接，运行时直接调用（插件就是这样实现的）</p>
+
+<h3 id="编译时链接">编译时链接</h3>
+
+<p>gcc -g -o main main.c -L ./so -lpcap_api -I ./so 连接到可执行文件</p>
+
+<p>再执行./main的时候就可以用到libpcap_api.so里的所有符号了。</p>
+
+<p><strong>需要注意</strong>：这只是编译时能找到这个库，但是要确保程序在运行时可以找到这个动态链接库。你可以将链接库放到标准目录下，例如 /usr/lib，或者设置一个合适的环境变量，例如 LIBRARY_PATH。不同系统，具有不同的加载链接库的方法
+linux 下：
+export LD_LIBRARY_PATH=/data/test/so/:$LD_LIBRARY_PATH</p>
+
+<p><strong>gcc -I -L -l选项</strong></p>
+
+<p>例如gcc -g -o main main.c -L ./so -lpcap_api -I ./so
+-I 优先从 ./so目录下找.h文件
+-L 优先从./so 目录下找库文件
+-lpcap_api找 libpcap_api.so文件</p>
+
+<h3 id="以插件的形式调用">以插件的形式调用</h3>
+
+<p><strong>插件的好处：</strong></p>
+
+<p>1.编译时不用-l 写死链接上这个库</p>
+
+<p>2.可以通过代码决定运行时啥时候加载，而且可以卸载。</p>
+
+<p>所以插件更灵活</p>
+
+<p>插件用到libdl.so库，这个库是用来在运行时以插件的方式调用so的。</p>
+
+<p>主要是三个函数：</p>
+
+<p><strong>dlopen</strong>:打开动态库，返回一个句柄。函数原型：</p>
+
+<p><code class="language-plaintext highlighter-rouge">void * dlopen( const char * *pathname*, int *mode*);</code></p>
+
+<p>mode是打开方式，其值有多个，不同操作系统上实现的功能有所不同，在linux下，按功能可分为三类：</p>
+
+<p>1、解析方式</p>
+
+<p>RTLD_LAZY：在dlopen返回前，对于动态库中的未定义的符号不执行解析（只对函数引用有效，对于变量引用总是立即解析）。</p>
+
+<p>RTLD_NOW： 需要在dlopen返回前，解析出所有未定义符号，如果解析不出来，在dlopen会返回NULL，错误为：: undefined symbol: xxxx…….</p>
+
+<p>2、作用范围，可与解析方式通过<code class="language-plaintext highlighter-rouge">“|”</code>组合使用。</p>
+
+<p>RTLD_GLOBAL：动态库中定义的符号可被其后打开的其它库解析。</p>
+
+<p>RTLD_LOCAL： 与RTLD_GLOBAL作用相反，动态库中定义的符号不能被其后打开的其它库重定位。如果没有指明是RTLD_GLOBAL还是RTLD_LOCAL，则缺省为RTLD_LOCAL。</p>
+
+<p>3、作用方式</p>
+
+<p>RTLD_NODELETE： 在dlclose()期间不卸载库，并且在以后使用dlopen()重新加载库时不初始化库中的静态变量。这个flag不是POSIX-2001标准。</p>
+
+<p>RTLD_NOLOAD： 不加载库。可用于测试库是否已加载(dlopen()返回NULL说明未加载，否则说明已加载），也可用于改变已加载库的flag，如：先前加载库的flag为RTLD_LOCAL，用<code class="language-plaintext highlighter-rouge">dlopen(RTLD_NOLOAD|RTLD_GLOBAL)</code>后flag将变成RTLD_GLOBAL。这个flag不是POSIX-2001标准。</p>
+
+<p>RTLD_DEEPBIND：在搜索全局符号前先搜索库内的符号，避免同名符号的冲突。这个flag不是POSIX-2001标准。</p>
+
+<p>dlsym:从动态库中找指定的符号，返回这个符号的指针。函数原型：</p>
+
+<p><code class="language-plaintext highlighter-rouge">void *dlsym (void *handle,const char *symbol)</code></p>
+
+<p>handle:就是dlopen返回的so句柄</p>
+
+<p>symbol：是so中的符号名</p>
+
+<p>dlclose:关闭这个动态库。其实是对这个动态库的引用减一，当引用数变成0的时候，动态库才会关闭。通常如果一个插件需要一直挂载的话，就不调用这个函数。函数原型：</p>
+
+<p><code class="language-plaintext highlighter-rouge">int dlclose (void *handle)</code></p>
+
+<p>handle:dlopen返回的句柄</p>
+
+<p>使用这个库的时候，编译时要带上 -ldl (指定dl库) -rdynamic(通知链接器将所有符号添加到动态符号表中(目的是能够通过使用 dlopen 来实现向后跟踪)，但我实际测试时，发现没有加rdynamic也可以正常使用。</p>
+
+<p>下面是测试的代码：</p>
+
+<p><strong>a.h:</strong></p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">func</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p><strong>a.c:</strong></p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">"stdio.h"</span><span class="cp">
+</span><span class="kt">int</span> <span class="nf">func</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span> <span class="p">,</span><span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>编译出liba.so:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gcc</span> <span class="o">-</span><span class="n">g</span> <span class="o">-</span><span class="n">fPIC</span> <span class="o">-</span><span class="n">Wall</span> <span class="o">-</span><span class="n">shared</span> <span class="n">a</span><span class="p">.</span><span class="n">c</span> <span class="o">-</span><span class="n">o</span> <span class="n">liba</span><span class="p">.</span><span class="n">so</span>
+</code></pre></div></div>
+
+<p><strong>test.c:</strong></p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">"a.h"</span><span class="cp">
+#include</span> <span class="cpf">"stdio.h"</span><span class="cp">
+#include</span> <span class="cpf">&lt;dlfcn.h&gt;</span><span class="cp">
+</span>
+<span class="cp">#define SO_PATH "./liba.so"
+</span><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kt">void</span> <span class="o">*</span><span class="n">handler</span><span class="p">;</span>
+    <span class="k">typedef</span> <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">fun</span><span class="p">)(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="p">);</span>
+    <span class="n">fun</span> <span class="n">fun1</span><span class="p">;</span>
+    <span class="n">handler</span> <span class="o">=</span> <span class="n">dlopen</span><span class="p">(</span><span class="n">SO_PATH</span><span class="p">,</span> <span class="n">RTLD_LAZY</span><span class="p">);</span>
+    <span class="n">fun1</span> <span class="o">=</span> <span class="n">dlsym</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="s">"func"</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span> <span class="n">fun1</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">));</span>
+    <span class="n">dlclose</span><span class="p">(</span><span class="n">handler</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>编译出test可执行文件</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gcc test.c -L ./ -ldl -o test
+</code></pre></div></div>
+
+<p>执行./test，即可得到输出结果”3“</p>]]></content><author><name>Lil bear</name></author><category term="C语言" /><category term="C语言" /><summary type="html"><![CDATA[生成动态链接库(so文件) gcc 编译时加上-shared选项，表示创建动态链接库，该库在运行时才会加载，而非编译时加载。 编译时还得配合 -fPIC选项，告诉编译器产生与位置无关代码（Position-Independent Code），这时产生的代码中就没有绝对地址了，全部使用相对地址，所以代码可以被加载器加载到内存的任意位置，都可以正确的执行。这正是共享库所要求的，共享库被加载时，在内存的位置不是固定的。 例如： gcc -g -fPIC -Wall -shared pcap_api.c -o libpcap_api.so 编译出来so 使用so的两种方式 有两种方式可以使用一个so。一个是编译的时候直接链接上，然后执行的时候再调用。第二种是编译时不链接，运行时直接调用（插件就是这样实现的） 编译时链接 gcc -g -o main main.c -L ./so -lpcap_api -I ./so 连接到可执行文件 再执行./main的时候就可以用到libpcap_api.so里的所有符号了。 需要注意：这只是编译时能找到这个库，但是要确保程序在运行时可以找到这个动态链接库。你可以将链接库放到标准目录下，例如 /usr/lib，或者设置一个合适的环境变量，例如 LIBRARY_PATH。不同系统，具有不同的加载链接库的方法 linux 下： export LD_LIBRARY_PATH=/data/test/so/:$LD_LIBRARY_PATH gcc -I -L -l选项 例如gcc -g -o main main.c -L ./so -lpcap_api -I ./so -I 优先从 ./so目录下找.h文件 -L 优先从./so 目录下找库文件 -lpcap_api找 libpcap_api.so文件 以插件的形式调用 插件的好处： 1.编译时不用-l 写死链接上这个库 2.可以通过代码决定运行时啥时候加载，而且可以卸载。 所以插件更灵活 插件用到libdl.so库，这个库是用来在运行时以插件的方式调用so的。 主要是三个函数： dlopen:打开动态库，返回一个句柄。函数原型： void * dlopen( const char * *pathname*, int *mode*); mode是打开方式，其值有多个，不同操作系统上实现的功能有所不同，在linux下，按功能可分为三类： 1、解析方式 RTLD_LAZY：在dlopen返回前，对于动态库中的未定义的符号不执行解析（只对函数引用有效，对于变量引用总是立即解析）。 RTLD_NOW： 需要在dlopen返回前，解析出所有未定义符号，如果解析不出来，在dlopen会返回NULL，错误为：: undefined symbol: xxxx……. 2、作用范围，可与解析方式通过“|”组合使用。 RTLD_GLOBAL：动态库中定义的符号可被其后打开的其它库解析。 RTLD_LOCAL： 与RTLD_GLOBAL作用相反，动态库中定义的符号不能被其后打开的其它库重定位。如果没有指明是RTLD_GLOBAL还是RTLD_LOCAL，则缺省为RTLD_LOCAL。 3、作用方式 RTLD_NODELETE： 在dlclose()期间不卸载库，并且在以后使用dlopen()重新加载库时不初始化库中的静态变量。这个flag不是POSIX-2001标准。 RTLD_NOLOAD： 不加载库。可用于测试库是否已加载(dlopen()返回NULL说明未加载，否则说明已加载），也可用于改变已加载库的flag，如：先前加载库的flag为RTLD_LOCAL，用dlopen(RTLD_NOLOAD|RTLD_GLOBAL)后flag将变成RTLD_GLOBAL。这个flag不是POSIX-2001标准。 RTLD_DEEPBIND：在搜索全局符号前先搜索库内的符号，避免同名符号的冲突。这个flag不是POSIX-2001标准。 dlsym:从动态库中找指定的符号，返回这个符号的指针。函数原型： void *dlsym (void *handle,const char *symbol) handle:就是dlopen返回的so句柄 symbol：是so中的符号名 dlclose:关闭这个动态库。其实是对这个动态库的引用减一，当引用数变成0的时候，动态库才会关闭。通常如果一个插件需要一直挂载的话，就不调用这个函数。函数原型： int dlclose (void *handle) handle:dlopen返回的句柄 使用这个库的时候，编译时要带上 -ldl (指定dl库) -rdynamic(通知链接器将所有符号添加到动态符号表中(目的是能够通过使用 dlopen 来实现向后跟踪)，但我实际测试时，发现没有加rdynamic也可以正常使用。 下面是测试的代码： a.h: int func(int a, int b); a.c: #include "stdio.h" int func(int a ,int b) { return a+b; } 编译出liba.so: gcc -g -fPIC -Wall -shared a.c -o liba.so test.c: #include "a.h" #include "stdio.h" #include &lt;dlfcn.h&gt; #define SO_PATH "./liba.so" int main() { void *handler; typedef int (*fun)(int, int); fun fun1; handler = dlopen(SO_PATH, RTLD_LAZY); fun1 = dlsym(handler, "func"); printf("%d", fun1(1,2)); dlclose(handler); } 编译出test可执行文件 gcc test.c -L ./ -ldl -o test 执行./test，即可得到输出结果”3“]]></summary></entry><entry><title type="html">jekyll+github pages搭建博客的过程</title><link href="/jekyll-theme-yat/jekyll/2022/07/11/%E8%AE%B0%E5%BD%95jekyll+github-pages%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E8%BF%87%E7%A8%8B.html" rel="alternate" type="text/html" title="jekyll+github pages搭建博客的过程" /><published>2022-07-11T00:00:00+00:00</published><updated>2022-07-11T00:00:00+00:00</updated><id>/jekyll-theme-yat/jekyll/2022/07/11/%E8%AE%B0%E5%BD%95jekyll+github-pages%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E8%BF%87%E7%A8%8B</id><content type="html" xml:base="/jekyll-theme-yat/jekyll/2022/07/11/%E8%AE%B0%E5%BD%95jekyll+github-pages%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E8%BF%87%E7%A8%8B.html"><![CDATA[<h1 id="jekyllgithub-pages搭建博客的过程">jekyll+github pages搭建博客的过程</h1>
+
+<p>jekyll是一个静态网页生成的工具，可以把markdown等格式的文件转换成静态的网页，生成了之后可以在本地直接通过http://localhost:4000来查看静态的网页，也可以关联到github pages上。下面来介绍这两种方式。</p>
+
+<h2 id="本地搭建博客">本地搭建博客</h2>
+
+<p>参考：<a href="https://www.jekyll.com.cn/">jekyll官网</a>。</p>
+
+<p>环境准备：</p>
+
+<p><img src="/assets/images/1.PNG" alt="" /></p>
+
+<p>准备好环境之后按照如下步骤操作：</p>
+
+<p><img src="/assets/images/2.PNG" alt="" /></p>
+
+<p>一切顺利的话，就能在本地预览博客了。如果不会/不想自己设置博客格式的话，可以在这里找一个喜欢的模板fork一下，再克隆下来：<a href="http://jekyllthemes.org/">博客模板</a>。再在项目根目录执行bundle exec jekyll serve。</p>
+
+<p>但是正如生活一样，想要一点问题都没遇到也是不太可能。</p>
+
+<p>你可能会遇到，4000端口被占用的问题，因为jekyll默认使用4000端口。这时用<code class="language-plaintext highlighter-rouge">netstat |find "4000"</code>查看哪个进程占用了这个端口，把他杀掉就行。或者在jekyll项目的_config.yml文件中加上<code class="language-plaintext highlighter-rouge">port: xxx</code>，可以修改默认的端口为空闲的端口就可以了。</p>
+
+<p>也可能会遇到执行bundle exec jekyll serve的时候，有很多gem库的版本不对，这时可以用gem install -v 1.0.1 xxx来安装指定版本的库</p>
+
+<h2 id="公网访问博客">公网访问博客</h2>
+
+<p>我们搭一个博客肯定不想只能在本地访问， 想要在公网访问的话，就得把这个静态网站挂载到github pages上</p>
+
+<p>github pages是github提供的一个托管静态网页的功能。原理就是，我们既然可以通过特定的url访问github自己的主页或项目，就相当于是github已经提供了一个公网上你专属的域名和数据库，这不就是一个博客服务器需要的两个东西吗？</p>
+
+<p>可能会遇到在本地网页是正常显示的，但是到了github上就格式就乱了。解决办法是：</p>
+
+<p><code class="language-plaintext highlighter-rouge">在_config.yml中把baseurl改为</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">baseurl=""</code></p>
+
+<p>最简单的实践：</p>
+
+<p>建立一个空项目，把项目的名称改成 用户名.github.io，在项目根目录搞一个index.html的文件，里面写上hello world，这样这个项目就是一个静态网站了。开启github pages后就可以通过https://用户名.github.io来访问这个项目。</p>
+
+<p>怎么把jekyll搭建的静态网站挂载到github pages上呢？</p>
+
+<p>把我们之前fork的别人已经写好的jekyll博客模板，远端的项目名字改成用户名.github.io就可以了。就是这样简单。</p>
+
+<h2 id="写博客">写博客</h2>
+
+<p>项目的_posts目录是存放博客的位置，我们在这里添加一个新的文件，格式是年-月-日-xxxx.md。然后文件的开头要加一个YAML代码块，来指示该博文的格式，标题，标签等。</p>
+
+<p><img src="/assets/images/3.PNG" alt="" /></p>
+
+<p>然后下面就可以用markdown的语法来写博文了，写完可以本地bundle exec jekyll serve，看下效果，也可以直接push到远端，让github pages渲染。我比较懒，就直接push了。</p>]]></content><author><name>Lil bear</name></author><category term="jekyll" /><category term="jekyll" /><summary type="html"><![CDATA[jekyll+github pages搭建博客的过程 jekyll是一个静态网页生成的工具，可以把markdown等格式的文件转换成静态的网页，生成了之后可以在本地直接通过http://localhost:4000来查看静态的网页，也可以关联到github pages上。下面来介绍这两种方式。 本地搭建博客 参考：jekyll官网。 环境准备： 准备好环境之后按照如下步骤操作： 一切顺利的话，就能在本地预览博客了。如果不会/不想自己设置博客格式的话，可以在这里找一个喜欢的模板fork一下，再克隆下来：博客模板。再在项目根目录执行bundle exec jekyll serve。 但是正如生活一样，想要一点问题都没遇到也是不太可能。 你可能会遇到，4000端口被占用的问题，因为jekyll默认使用4000端口。这时用netstat |find "4000"查看哪个进程占用了这个端口，把他杀掉就行。或者在jekyll项目的_config.yml文件中加上port: xxx，可以修改默认的端口为空闲的端口就可以了。 也可能会遇到执行bundle exec jekyll serve的时候，有很多gem库的版本不对，这时可以用gem install -v 1.0.1 xxx来安装指定版本的库 公网访问博客 我们搭一个博客肯定不想只能在本地访问， 想要在公网访问的话，就得把这个静态网站挂载到github pages上 github pages是github提供的一个托管静态网页的功能。原理就是，我们既然可以通过特定的url访问github自己的主页或项目，就相当于是github已经提供了一个公网上你专属的域名和数据库，这不就是一个博客服务器需要的两个东西吗？ 可能会遇到在本地网页是正常显示的，但是到了github上就格式就乱了。解决办法是： 在_config.yml中把baseurl改为 baseurl="" 最简单的实践： 建立一个空项目，把项目的名称改成 用户名.github.io，在项目根目录搞一个index.html的文件，里面写上hello world，这样这个项目就是一个静态网站了。开启github pages后就可以通过https://用户名.github.io来访问这个项目。 怎么把jekyll搭建的静态网站挂载到github pages上呢？ 把我们之前fork的别人已经写好的jekyll博客模板，远端的项目名字改成用户名.github.io就可以了。就是这样简单。 写博客 项目的_posts目录是存放博客的位置，我们在这里添加一个新的文件，格式是年-月-日-xxxx.md。然后文件的开头要加一个YAML代码块，来指示该博文的格式，标题，标签等。 然后下面就可以用markdown的语法来写博文了，写完可以本地bundle exec jekyll serve，看下效果，也可以直接push到远端，让github pages渲染。我比较懒，就直接push了。]]></summary></entry></feed>

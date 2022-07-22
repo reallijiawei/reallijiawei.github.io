@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>linux知识 | Lil Bear’s blog</title>
+<meta name="generator" content="Jekyll v4.2.2">
+<meta property="og:title" content="linux知识">
+<meta name="author" content="Lil bear">
+<meta property="og:locale" content="en_US">
+<meta name="description" content='看时间date 看时间戳 date +%s dnf 是centos的包管理工具 vi /etc/yum.repos.d/CentOS-AF.repo配置好源之后， 可以直接dnf install ls -lR|grep "^-"|wc -l 可以统计当前目录及子目录下所有文件的个数 **ls -lR** | grep "^d"| wc -l 可以统计当前目录及子目录下所有目录的个数 R表示递归，去掉R只统计当前目录 **ls -lrt** /tmp | wc -l 可以统计指定的目录 ps -efww|grep sendmail |grep -v grep|cut -c 9-15|xargs kill -9 杀掉同名进程sendmail 用scp远程传输文件: scp -P 22345 afwiki_hci.tar admin@10.154.105.100:/data/ rpm -qf /sfos/system/resource/lang/alarmd/alarmd.ini可以查安装包 lsof 可以看文件被谁引用，由于unix一切皆文件，所以也可以看端口被谁监听 lsof -n |grep 80 还可以看某个进程都打开了哪些文件： lsof -p pid netstat -anp也可以看端口监听情况 ps -auxf |grep dap可以看进程详细信息包括谁是谁的子进程等 添加定时脚本 Linux定时脚本是/etc/crontab这个脚本文件，linux每分钟都会调用这个这个脚本，执行其中的命令。 可以直接在这里面添加命令，如 * * * * * root /etc/init.d/smb restart 也可以添加脚本 * * * * *root test.sh 也可以像图片中那样，执行整个文件夹里的文件，用run-parts 命令即可 前面的定时时间设置也比较简单，参考给出的介绍即可。 需要注意的是 1.如果想固定的一个时间执行，比如9点，或星期六，那就再对应的位置直接填数字即可，如果是多个时间点，比如7点和9点，中间用逗号隔开写就行 2.如果是想表示每隔多少时间执行一次，比如每隔两天，可以在对应的位置用*/2表示 3.如果是想表示时间段，比如5点到9点，可以用5-9表示 Linux默认创建的文件都是文本文件，只是可读可写的（rw），并没有可执行的权限(x)，因此创建的脚本文件需要手动加权限 chmod 755 test.sh 为整个目录加权限 chmod -R 755 /data 数字代表的意思： r:4 可读 w:2 可写 x:1 可执行 ls -l 可以查看权限和修改时间，文件大小等详细信息 查看各磁盘分区情况： fdisk -l 下载对应网站的某个文件： curl -O 10.154.105.100:5000/opt/start_wiki.sh 启动服务： /etc/init.d/apache start 或者 service apache start 最新的linux使用了systemd这个守护进程来实现对服务的管理 命令：systemctl start apache 杀死一个进程： kill -9 pid 手动挂载磁盘后，要将挂载信息写入/etc/fstab中，否则下次开机挂载就没了： /dev/vg-data/lv-data /data ext4 defaults 0 0 数据库的命令，最后一定要加上分号; 表示这个命令的结束 往文件里写信息的命令： echo “10.154.105.100 dockerhub.sfos.org” » /etc/hosts &gt;&gt;表示追加到文件末尾 &gt;表示覆盖文件 Linux 解压zip文件命令： unzip test.zip /data/temp 统计目录下文件的大小： du -h –max-depth=1 /data &gt; /blackbox/docker_space_infors.txt -h 以k,m,g，t等格式显示 -m 以m的格式显示 -k 以k的格式显示 –max-depth =1 即统计当前目录下文件夹的大小 对文件按某一列排序： sort -h -k1 /blackbox/docker_space_infors.txt -o /blackbox/docker_space_infors.txt -h 按照k,m,g,t等格式排序 -n 按照数字排序 -k1 第一列 -o 输出文件的名字，可以为原文件，这样会把源文件覆盖掉 linux 缺省的运行级，RHS用到的级别如下： 0 - 停机 ，机器关闭。 1 - 单用户模式 。就像Win9x下的安全模式类似 2 - 多用户，但是没有NFS 进入无网络服务的多用户模式 3 - 完全多用户模式 ，是标准的运行级。 4 - 没有用到 ，一般不用，在一些特殊情况下可以用它来做一些事情。例如在笔记本 电脑的电池用尽时，可以切换到这个模式来 5 - X11 ，进到X Window系统了。 6 - 重新启动 ，运行init 6机器就会重启 linux开机后开启守护进程的过程 1.系统加电之后，首先进行的硬件自检，然后是bootloader对系统的初始化，加载内核。 2.启动内核，检测硬件，挂载根文件系统，初始化所有的设备驱动程序和数据结构 3.启动init进程，pid号为1 4.init进程根据/etc/inittab中的initdefault确定系统默认的运行级别 5.执行/etc/rc(n).d中的脚本，如果运行级别是3，那就执行/etc/rc3.d中的脚本 6./etc/rc(n).d中的脚本软连接到/etc/init.d中，S表示start,K 表示stop，是传给init.d的参数，后面的数字表示优先级,数值小的先执行，数值大的后执行。例如S01sysstat表示执行/etc/rc.d/init.d/sysstat start stat xxx 可以查看文件的访问时间 time xx.sh可以看该脚本的执行时间 C 内置库的头文件位置/usr/include/xxx.h 删除7天以上的文件 find . -maxdepth 1 ! -name “develop” -mtime +7 -exec rm -rf {} \; 指定pip源 pip install -i http://mirrors.xxxx.org/pypi/simple –trusted-host mirrors.xxxx.org requests_toolbelt 可以改后台密码 passwd admin vi模式粘贴乱缩进解决 :set paste 显示前5行后5行 head -n 5 tail -n 5 用法： head -n 5 test.txt 或 cat test.txt| head -n 5 获取随机数 cat /dev/urandom （快） cat /dev/random（慢） cat /dev/urandom | od -x 获取一行随机数，转为16进制 Linux系统下简单模拟高CPU\高内存\高负载的方法 CPU 下面命令会创建 CPU 负荷，方法是通过压缩随机数据并将结果发送到 /dev/null： cat /dev/urandom | gzip -9 &gt; /dev/null 如果你想要更大的负荷，或者系统有多个核，那么只需要对数据进行压缩和解压就行了，像这样： cat /dev/urandom | gzip -9 | gzip -d | gzip -9 | gzip -d &gt; /dev/null 按下 CTRL+C 来终止进程。 内存占用 下面命令会减少可用内存的总量。它是通过在内存中创建文件系统然后往里面写文件来实现的。你可以使用任意多的内存，只需要往里面写入更多的文件就行了。 首先，创建一个挂载点，然后将 ramfs 文件系统挂载上去： mkdir z mount -t ramfs ramfs z/ 第二步，使用 dd 在该目录下创建文件。这里我们创建了一个 128M 的文件： dd if=/dev/zero of=z/file bs=1M count=128 文件的大小可以通过下面这些操作符来修改： bs= 块大小。可以是任何数字后面接上 B（表示字节），K（表示 KB），M（ 表示 MB）或者 G（表示 GB）。 count= 要写多少个块。 磁盘 I/O 创建磁盘 I/O 的方法是先创建一个文件，然后使用 for 循环来不停地拷贝它。 下面使用命令 dd 创建了一个全是零的 1G 大小的文件： dd if=/dev/zero of=loadfile bs=1M count=1024 下面命令用 for 循环执行 10 次操作。每次都会拷贝 loadfile 来覆盖 loadfile1： for i in {1…10}; do cp loadfile loadfile1; done 通过修改 {1…10} 中的第二个参数来调整运行时间的长短。（LCTT 译注：你的 Linux 系统中的默认使用的 cp 命令很可能是 cp -i 的别名，这种情况下覆写会提示你输入 y 来确认， 你可以使用 -f参数的 cp 命令来覆盖此行为，或者直接用 /bin/cp 命令。） 若你想要一直运行，直到按下 CTRL+C 来停止，则运行下面命令： while true; do cp loadfile loadfile1; done taskset 可以把进程绑定到指定CPU上 shell文件解释器 #!/usr/bin/env bash #在不同的系统上提供了一些灵活性,但执行结果可能和bash有不同，比如pidof 查询不到执行的常驻脚本，但是ps就可以查到 #！/bin/bash #！/bin/sh 相当于开了POSIX模式的bash,运行的结果和bash可能有不同，比如当某行代码出错时，不继续往下解释,而bash会继续执行。 结论：优先用/bin/bash 卸载内核模块：rmmod 模块名 加载内核模块： insmod 模块名 dmesg 打印内核缓冲区内容，printk输出的内容就在这 dmesg -c 每次打印后清空缓冲区 renice 调整优先级 renice -n 10 -p PID -n 优先级范围-20 ~19 ，数值越低优先级越高 sh xxx.sh 或者./xxx.sh 会起一个进程来执行命令，里面设置的环境变量啥的不会影响外面的环境。 子进程继承父进程的环境变量，不继承父进程的自定义变量。 因此在sh xxx.sh时只会继承环境变量，不会继承自定义变量 而source xxx.sh不会另起进程，所以可以继承自定义变量 环境变量可以传递在不同的语言下都能用的变量 除了在shell下设置环境变量外，C库函数getenv和getenv可以设置获取环境变量 linux fork时有cow（Copy On Write）技术，可以写时再拷贝。 父进程和子进程一起运行，可以用于希望子进程异步的处理其他事物，而父进程按原计划运行。 fork后wait，可以使父进程等待子进程退出后才退出，wait2可以返回子进程退出时的返回码，通过返回码可以实现进程间通信 waitpid可以等待具体的子进程，waitpid2类似 内核有避免竞争的机制，将退出的进程信息都放到队列里，父进程就算处理的慢，也可以按照进程退出的顺序处理子进程的进程信息 但是如果父进程不发wait，信息就会一直在队列里存着，就会成为僵尸进程。所以可以用detach（pid）来起一个线程，专门wait这个子进程，实现子进程父进程分离 看顾进程：master/worker模式，由主进程fork几个worker进程实际处理业务，主进程负责和worker通信，保证子进程可以保持响应。 僵尸进程：子进程先结束了，但是父进程一直没有wait他，也就是没有读取子进程的返回码等信息，导致子进程虽然退出了，但是还有信息残留，死而未僵，所以叫僵尸进程。 孤儿进程： 因父亲进程先退出而导致一个子进程被 init 进程收养的进程为孤儿进程，即孤儿进程的父亲更改为 init 进程，该进程在孤儿进程退出后回收它的内核空间资源 父进程没有时间一直wait子进程退出，这时候可以用信号来实现，当子进程退出时，给父进程一个信号，父进程再wait就可以。但是当短时间内同一个信号来了很多次时，系统处理不过来，后面的几个信号会接不到，所以最好的办法是当第一个信号来时，就通过while循环不断wait，这时就要用非阻塞的wait。 当进程接受到信号时，可以执行：1.忽略2.定制操作3.默认操作 其中Term表示进程立即结束 core表示进程立即结束，并进行核心转储 ign表示忽略该信号 stop表示进程暂停运行 cont表示进程恢复运行 USR1和USR2是用户自定义的信号 构造一个守护进程： def daemonize_app if RUBY_VERSION &lt; "1.9" exit if fork Process.setsid exit if fork Dir.chdir "/" STDIN.reopen "/dev/null" STDOUT.reopen "/dev/null" , "a" STDERR.reopen "/dev/null" , "a" else Process.daemon end end 第一次fork父进程退出，进程成为孤儿进程 process.setsid把子进程设为进程组长和会话组长，用于脱离父进程的控制，不会因为父进程的信号而终止。但是由于是会话组长，所以还是可能依附于一个终端 第二次fork，又衍生一个子进程，这个子进程不是会话组长，所以也拜托了终端的限制，彻底成为没人管的守护进程。 对一个会话组发的信号会发给会话内的所有进程组，进程组又会发给所有进程。 C中的system函数的内部实现就是fork+exec 先fork出来一个子进程再执行exec，exec函数会取代执行他的进程，一旦exec函数执行成功, 它就不会返回了, 进程结束. 但是如果exec函数执行失败, 它会返回失败的信息, 父进程可以wait来获取返回码。 查看centos版本 cat /etc/redhat-release linux加载环境变量 临时生效可以export 想要永久生效，要修改/etc/profile文件，或者在/etc/profile.d目录下，增加个脚本，里面加上export LIBRARY_PATH=libtest1:libtest2:$LIBRARY_PATH 类似的命令 想要立即生效就source /etc/profile否则得等到再次登录时生效 vim和vi是两套东西，vim是vi的改进版 vim使用的技巧： 进到文件里之后输入：%d，再保存即可清空整个文件 linux man命令分区 想查哪个分区，就man 2 read 1 用户命令， 可由任何人启动的。 2 系统调用， 即由内核提供的函数。 3 例程， 即库函数，比如标准C库libc。 4 设备， 即/dev目录下的特殊文件。 5 文件格式描述， 例如/etc/passwd。 6 游戏， 不用解释啦！ 7 杂项， 例如宏命令包、惯例等。 8 系统管理员工具， 只能由root启动。 9 其他（Linux特定的）， 用来存放内核例行程序的文档。 n 新文档， 可能要移到更适合的领域。 linux C库函数的头文件都在/usr/include下 linux设置系统时间： date -s “20210909 10:38:50” hwclock –systohc（同步系统时间到硬件） Text file busy 发生此错误是因为当前文件已被占用，找出占用该文件的进程并杀死就可以了。 使用到的命令如下： 找出占用该文件的进程： fuser 文件名 杀死占用该文件的进程 kill -9 进程id linux 软连接要用绝对路径 arping可以ping ip返回mac，或者ping mac返回IP 设置dns服务器 在/etc/resolve.conf里添加类似这样的语句： nameserver 200.200.10.199即可 /proc/locks 保存当前被锁的inode节点 查看linux版本号： uname -a 或cat /proc/version 查看一个进程占用的物理内存： cat /proc/13137/status |grep VmRSS ps -aux |grep xxx 查看进程运行时间： 1.ps -eo pid,tty,user,comm,lstart,etime|grep xxx 参数说明： pid：进程ID tty：终端 user：用户 comm：进程名 lstart：开始时间 etime：运行时间 2.ps -ef |grep xxx USER:用户名 %CPU:进程占用的CPU百分比 %MEM:占用内存的百分比 VSZ:该进程使用的虚拟內存量（KB） RSS:该进程占用的固定內存量（KB）（驻留中页的数量） STAT:进程的状态 START:该进程被触发启动时间 TIME:该进程实际使用CPU运行的时间 利用strace可以查看进程相关的信息 例如进程被谁杀了 strace -T -tt -e trace=all -p pid ~/.ssh/known_hosts文件 当A第一次通过ssh连接到B，B会将公钥传给A，存进known_hosts文件中。下次A再sshB时，B还会再传一个公钥给A，拿这个公钥和known_hosts中的公钥作对比，一样的话就验证通过，可以连接，否则不能连接。 如果有验证失败的报错：Host key verification failed。有两种解决办法： 1.手动把A中的known_hosts里记录B 的公钥删掉，然后再手动登录一次，生成正确的密钥，以后就可以直接登录了 2.如果是自动化部署的话，可以设置配置文件，让ssh不做known_hosts的校验（安全性会降低）： vi ~/.ssh/config //编辑配置文件 添加以下两行代码： StrictHostKeyChecking no UserKnownHostsFile /dev/null'>
+<meta property="og:description" content='看时间date 看时间戳 date +%s dnf 是centos的包管理工具 vi /etc/yum.repos.d/CentOS-AF.repo配置好源之后， 可以直接dnf install ls -lR|grep "^-"|wc -l 可以统计当前目录及子目录下所有文件的个数 **ls -lR** | grep "^d"| wc -l 可以统计当前目录及子目录下所有目录的个数 R表示递归，去掉R只统计当前目录 **ls -lrt** /tmp | wc -l 可以统计指定的目录 ps -efww|grep sendmail |grep -v grep|cut -c 9-15|xargs kill -9 杀掉同名进程sendmail 用scp远程传输文件: scp -P 22345 afwiki_hci.tar admin@10.154.105.100:/data/ rpm -qf /sfos/system/resource/lang/alarmd/alarmd.ini可以查安装包 lsof 可以看文件被谁引用，由于unix一切皆文件，所以也可以看端口被谁监听 lsof -n |grep 80 还可以看某个进程都打开了哪些文件： lsof -p pid netstat -anp也可以看端口监听情况 ps -auxf |grep dap可以看进程详细信息包括谁是谁的子进程等 添加定时脚本 Linux定时脚本是/etc/crontab这个脚本文件，linux每分钟都会调用这个这个脚本，执行其中的命令。 可以直接在这里面添加命令，如 * * * * * root /etc/init.d/smb restart 也可以添加脚本 * * * * *root test.sh 也可以像图片中那样，执行整个文件夹里的文件，用run-parts 命令即可 前面的定时时间设置也比较简单，参考给出的介绍即可。 需要注意的是 1.如果想固定的一个时间执行，比如9点，或星期六，那就再对应的位置直接填数字即可，如果是多个时间点，比如7点和9点，中间用逗号隔开写就行 2.如果是想表示每隔多少时间执行一次，比如每隔两天，可以在对应的位置用*/2表示 3.如果是想表示时间段，比如5点到9点，可以用5-9表示 Linux默认创建的文件都是文本文件，只是可读可写的（rw），并没有可执行的权限(x)，因此创建的脚本文件需要手动加权限 chmod 755 test.sh 为整个目录加权限 chmod -R 755 /data 数字代表的意思： r:4 可读 w:2 可写 x:1 可执行 ls -l 可以查看权限和修改时间，文件大小等详细信息 查看各磁盘分区情况： fdisk -l 下载对应网站的某个文件： curl -O 10.154.105.100:5000/opt/start_wiki.sh 启动服务： /etc/init.d/apache start 或者 service apache start 最新的linux使用了systemd这个守护进程来实现对服务的管理 命令：systemctl start apache 杀死一个进程： kill -9 pid 手动挂载磁盘后，要将挂载信息写入/etc/fstab中，否则下次开机挂载就没了： /dev/vg-data/lv-data /data ext4 defaults 0 0 数据库的命令，最后一定要加上分号; 表示这个命令的结束 往文件里写信息的命令： echo “10.154.105.100 dockerhub.sfos.org” » /etc/hosts &gt;&gt;表示追加到文件末尾 &gt;表示覆盖文件 Linux 解压zip文件命令： unzip test.zip /data/temp 统计目录下文件的大小： du -h –max-depth=1 /data &gt; /blackbox/docker_space_infors.txt -h 以k,m,g，t等格式显示 -m 以m的格式显示 -k 以k的格式显示 –max-depth =1 即统计当前目录下文件夹的大小 对文件按某一列排序： sort -h -k1 /blackbox/docker_space_infors.txt -o /blackbox/docker_space_infors.txt -h 按照k,m,g,t等格式排序 -n 按照数字排序 -k1 第一列 -o 输出文件的名字，可以为原文件，这样会把源文件覆盖掉 linux 缺省的运行级，RHS用到的级别如下： 0 - 停机 ，机器关闭。 1 - 单用户模式 。就像Win9x下的安全模式类似 2 - 多用户，但是没有NFS 进入无网络服务的多用户模式 3 - 完全多用户模式 ，是标准的运行级。 4 - 没有用到 ，一般不用，在一些特殊情况下可以用它来做一些事情。例如在笔记本 电脑的电池用尽时，可以切换到这个模式来 5 - X11 ，进到X Window系统了。 6 - 重新启动 ，运行init 6机器就会重启 linux开机后开启守护进程的过程 1.系统加电之后，首先进行的硬件自检，然后是bootloader对系统的初始化，加载内核。 2.启动内核，检测硬件，挂载根文件系统，初始化所有的设备驱动程序和数据结构 3.启动init进程，pid号为1 4.init进程根据/etc/inittab中的initdefault确定系统默认的运行级别 5.执行/etc/rc(n).d中的脚本，如果运行级别是3，那就执行/etc/rc3.d中的脚本 6./etc/rc(n).d中的脚本软连接到/etc/init.d中，S表示start,K 表示stop，是传给init.d的参数，后面的数字表示优先级,数值小的先执行，数值大的后执行。例如S01sysstat表示执行/etc/rc.d/init.d/sysstat start stat xxx 可以查看文件的访问时间 time xx.sh可以看该脚本的执行时间 C 内置库的头文件位置/usr/include/xxx.h 删除7天以上的文件 find . -maxdepth 1 ! -name “develop” -mtime +7 -exec rm -rf {} \; 指定pip源 pip install -i http://mirrors.xxxx.org/pypi/simple –trusted-host mirrors.xxxx.org requests_toolbelt 可以改后台密码 passwd admin vi模式粘贴乱缩进解决 :set paste 显示前5行后5行 head -n 5 tail -n 5 用法： head -n 5 test.txt 或 cat test.txt| head -n 5 获取随机数 cat /dev/urandom （快） cat /dev/random（慢） cat /dev/urandom | od -x 获取一行随机数，转为16进制 Linux系统下简单模拟高CPU\高内存\高负载的方法 CPU 下面命令会创建 CPU 负荷，方法是通过压缩随机数据并将结果发送到 /dev/null： cat /dev/urandom | gzip -9 &gt; /dev/null 如果你想要更大的负荷，或者系统有多个核，那么只需要对数据进行压缩和解压就行了，像这样： cat /dev/urandom | gzip -9 | gzip -d | gzip -9 | gzip -d &gt; /dev/null 按下 CTRL+C 来终止进程。 内存占用 下面命令会减少可用内存的总量。它是通过在内存中创建文件系统然后往里面写文件来实现的。你可以使用任意多的内存，只需要往里面写入更多的文件就行了。 首先，创建一个挂载点，然后将 ramfs 文件系统挂载上去： mkdir z mount -t ramfs ramfs z/ 第二步，使用 dd 在该目录下创建文件。这里我们创建了一个 128M 的文件： dd if=/dev/zero of=z/file bs=1M count=128 文件的大小可以通过下面这些操作符来修改： bs= 块大小。可以是任何数字后面接上 B（表示字节），K（表示 KB），M（ 表示 MB）或者 G（表示 GB）。 count= 要写多少个块。 磁盘 I/O 创建磁盘 I/O 的方法是先创建一个文件，然后使用 for 循环来不停地拷贝它。 下面使用命令 dd 创建了一个全是零的 1G 大小的文件： dd if=/dev/zero of=loadfile bs=1M count=1024 下面命令用 for 循环执行 10 次操作。每次都会拷贝 loadfile 来覆盖 loadfile1： for i in {1…10}; do cp loadfile loadfile1; done 通过修改 {1…10} 中的第二个参数来调整运行时间的长短。（LCTT 译注：你的 Linux 系统中的默认使用的 cp 命令很可能是 cp -i 的别名，这种情况下覆写会提示你输入 y 来确认， 你可以使用 -f参数的 cp 命令来覆盖此行为，或者直接用 /bin/cp 命令。） 若你想要一直运行，直到按下 CTRL+C 来停止，则运行下面命令： while true; do cp loadfile loadfile1; done taskset 可以把进程绑定到指定CPU上 shell文件解释器 #!/usr/bin/env bash #在不同的系统上提供了一些灵活性,但执行结果可能和bash有不同，比如pidof 查询不到执行的常驻脚本，但是ps就可以查到 #！/bin/bash #！/bin/sh 相当于开了POSIX模式的bash,运行的结果和bash可能有不同，比如当某行代码出错时，不继续往下解释,而bash会继续执行。 结论：优先用/bin/bash 卸载内核模块：rmmod 模块名 加载内核模块： insmod 模块名 dmesg 打印内核缓冲区内容，printk输出的内容就在这 dmesg -c 每次打印后清空缓冲区 renice 调整优先级 renice -n 10 -p PID -n 优先级范围-20 ~19 ，数值越低优先级越高 sh xxx.sh 或者./xxx.sh 会起一个进程来执行命令，里面设置的环境变量啥的不会影响外面的环境。 子进程继承父进程的环境变量，不继承父进程的自定义变量。 因此在sh xxx.sh时只会继承环境变量，不会继承自定义变量 而source xxx.sh不会另起进程，所以可以继承自定义变量 环境变量可以传递在不同的语言下都能用的变量 除了在shell下设置环境变量外，C库函数getenv和getenv可以设置获取环境变量 linux fork时有cow（Copy On Write）技术，可以写时再拷贝。 父进程和子进程一起运行，可以用于希望子进程异步的处理其他事物，而父进程按原计划运行。 fork后wait，可以使父进程等待子进程退出后才退出，wait2可以返回子进程退出时的返回码，通过返回码可以实现进程间通信 waitpid可以等待具体的子进程，waitpid2类似 内核有避免竞争的机制，将退出的进程信息都放到队列里，父进程就算处理的慢，也可以按照进程退出的顺序处理子进程的进程信息 但是如果父进程不发wait，信息就会一直在队列里存着，就会成为僵尸进程。所以可以用detach（pid）来起一个线程，专门wait这个子进程，实现子进程父进程分离 看顾进程：master/worker模式，由主进程fork几个worker进程实际处理业务，主进程负责和worker通信，保证子进程可以保持响应。 僵尸进程：子进程先结束了，但是父进程一直没有wait他，也就是没有读取子进程的返回码等信息，导致子进程虽然退出了，但是还有信息残留，死而未僵，所以叫僵尸进程。 孤儿进程： 因父亲进程先退出而导致一个子进程被 init 进程收养的进程为孤儿进程，即孤儿进程的父亲更改为 init 进程，该进程在孤儿进程退出后回收它的内核空间资源 父进程没有时间一直wait子进程退出，这时候可以用信号来实现，当子进程退出时，给父进程一个信号，父进程再wait就可以。但是当短时间内同一个信号来了很多次时，系统处理不过来，后面的几个信号会接不到，所以最好的办法是当第一个信号来时，就通过while循环不断wait，这时就要用非阻塞的wait。 当进程接受到信号时，可以执行：1.忽略2.定制操作3.默认操作 其中Term表示进程立即结束 core表示进程立即结束，并进行核心转储 ign表示忽略该信号 stop表示进程暂停运行 cont表示进程恢复运行 USR1和USR2是用户自定义的信号 构造一个守护进程： def daemonize_app if RUBY_VERSION &lt; "1.9" exit if fork Process.setsid exit if fork Dir.chdir "/" STDIN.reopen "/dev/null" STDOUT.reopen "/dev/null" , "a" STDERR.reopen "/dev/null" , "a" else Process.daemon end end 第一次fork父进程退出，进程成为孤儿进程 process.setsid把子进程设为进程组长和会话组长，用于脱离父进程的控制，不会因为父进程的信号而终止。但是由于是会话组长，所以还是可能依附于一个终端 第二次fork，又衍生一个子进程，这个子进程不是会话组长，所以也拜托了终端的限制，彻底成为没人管的守护进程。 对一个会话组发的信号会发给会话内的所有进程组，进程组又会发给所有进程。 C中的system函数的内部实现就是fork+exec 先fork出来一个子进程再执行exec，exec函数会取代执行他的进程，一旦exec函数执行成功, 它就不会返回了, 进程结束. 但是如果exec函数执行失败, 它会返回失败的信息, 父进程可以wait来获取返回码。 查看centos版本 cat /etc/redhat-release linux加载环境变量 临时生效可以export 想要永久生效，要修改/etc/profile文件，或者在/etc/profile.d目录下，增加个脚本，里面加上export LIBRARY_PATH=libtest1:libtest2:$LIBRARY_PATH 类似的命令 想要立即生效就source /etc/profile否则得等到再次登录时生效 vim和vi是两套东西，vim是vi的改进版 vim使用的技巧： 进到文件里之后输入：%d，再保存即可清空整个文件 linux man命令分区 想查哪个分区，就man 2 read 1 用户命令， 可由任何人启动的。 2 系统调用， 即由内核提供的函数。 3 例程， 即库函数，比如标准C库libc。 4 设备， 即/dev目录下的特殊文件。 5 文件格式描述， 例如/etc/passwd。 6 游戏， 不用解释啦！ 7 杂项， 例如宏命令包、惯例等。 8 系统管理员工具， 只能由root启动。 9 其他（Linux特定的）， 用来存放内核例行程序的文档。 n 新文档， 可能要移到更适合的领域。 linux C库函数的头文件都在/usr/include下 linux设置系统时间： date -s “20210909 10:38:50” hwclock –systohc（同步系统时间到硬件） Text file busy 发生此错误是因为当前文件已被占用，找出占用该文件的进程并杀死就可以了。 使用到的命令如下： 找出占用该文件的进程： fuser 文件名 杀死占用该文件的进程 kill -9 进程id linux 软连接要用绝对路径 arping可以ping ip返回mac，或者ping mac返回IP 设置dns服务器 在/etc/resolve.conf里添加类似这样的语句： nameserver 200.200.10.199即可 /proc/locks 保存当前被锁的inode节点 查看linux版本号： uname -a 或cat /proc/version 查看一个进程占用的物理内存： cat /proc/13137/status |grep VmRSS ps -aux |grep xxx 查看进程运行时间： 1.ps -eo pid,tty,user,comm,lstart,etime|grep xxx 参数说明： pid：进程ID tty：终端 user：用户 comm：进程名 lstart：开始时间 etime：运行时间 2.ps -ef |grep xxx USER:用户名 %CPU:进程占用的CPU百分比 %MEM:占用内存的百分比 VSZ:该进程使用的虚拟內存量（KB） RSS:该进程占用的固定內存量（KB）（驻留中页的数量） STAT:进程的状态 START:该进程被触发启动时间 TIME:该进程实际使用CPU运行的时间 利用strace可以查看进程相关的信息 例如进程被谁杀了 strace -T -tt -e trace=all -p pid ~/.ssh/known_hosts文件 当A第一次通过ssh连接到B，B会将公钥传给A，存进known_hosts文件中。下次A再sshB时，B还会再传一个公钥给A，拿这个公钥和known_hosts中的公钥作对比，一样的话就验证通过，可以连接，否则不能连接。 如果有验证失败的报错：Host key verification failed。有两种解决办法： 1.手动把A中的known_hosts里记录B 的公钥删掉，然后再手动登录一次，生成正确的密钥，以后就可以直接登录了 2.如果是自动化部署的话，可以设置配置文件，让ssh不做known_hosts的校验（安全性会降低）： vi ~/.ssh/config //编辑配置文件 添加以下两行代码： StrictHostKeyChecking no UserKnownHostsFile /dev/null'>
+<link rel="canonical" href="/jekyll-theme-yat/linux/2022/07/14/linux.html">
+<meta property="og:url" content="/jekyll-theme-yat/linux/2022/07/14/linux.html">
+<meta property="og:site_name" content="Lil Bear’s blog">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2022-07-14T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="linux知识">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Lil bear"},"dateModified":"2022-07-14T00:00:00+00:00","datePublished":"2022-07-14T00:00:00+00:00","description":"看时间date 看时间戳 date +%s dnf 是centos的包管理工具 vi /etc/yum.repos.d/CentOS-AF.repo配置好源之后， 可以直接dnf install ls -lR|grep &quot;^-&quot;|wc -l 可以统计当前目录及子目录下所有文件的个数 **ls -lR** | grep &quot;^d&quot;| wc -l 可以统计当前目录及子目录下所有目录的个数 R表示递归，去掉R只统计当前目录 **ls -lrt** /tmp | wc -l 可以统计指定的目录 ps -efww|grep sendmail |grep -v grep|cut -c 9-15|xargs kill -9 杀掉同名进程sendmail 用scp远程传输文件: scp -P 22345 afwiki_hci.tar admin@10.154.105.100:/data/ rpm -qf /sfos/system/resource/lang/alarmd/alarmd.ini可以查安装包 lsof 可以看文件被谁引用，由于unix一切皆文件，所以也可以看端口被谁监听 lsof -n |grep 80 还可以看某个进程都打开了哪些文件： lsof -p pid netstat -anp也可以看端口监听情况 ps -auxf |grep dap可以看进程详细信息包括谁是谁的子进程等 添加定时脚本 Linux定时脚本是/etc/crontab这个脚本文件，linux每分钟都会调用这个这个脚本，执行其中的命令。 可以直接在这里面添加命令，如 * * * * * root /etc/init.d/smb restart 也可以添加脚本 * * * * *root test.sh 也可以像图片中那样，执行整个文件夹里的文件，用run-parts 命令即可 前面的定时时间设置也比较简单，参考给出的介绍即可。 需要注意的是 1.如果想固定的一个时间执行，比如9点，或星期六，那就再对应的位置直接填数字即可，如果是多个时间点，比如7点和9点，中间用逗号隔开写就行 2.如果是想表示每隔多少时间执行一次，比如每隔两天，可以在对应的位置用*/2表示 3.如果是想表示时间段，比如5点到9点，可以用5-9表示 Linux默认创建的文件都是文本文件，只是可读可写的（rw），并没有可执行的权限(x)，因此创建的脚本文件需要手动加权限 chmod 755 test.sh 为整个目录加权限 chmod -R 755 /data 数字代表的意思： r:4 可读 w:2 可写 x:1 可执行 ls -l 可以查看权限和修改时间，文件大小等详细信息 查看各磁盘分区情况： fdisk -l 下载对应网站的某个文件： curl -O 10.154.105.100:5000/opt/start_wiki.sh 启动服务： /etc/init.d/apache start 或者 service apache start 最新的linux使用了systemd这个守护进程来实现对服务的管理 命令：systemctl start apache 杀死一个进程： kill -9 pid 手动挂载磁盘后，要将挂载信息写入/etc/fstab中，否则下次开机挂载就没了： /dev/vg-data/lv-data /data ext4 defaults 0 0 数据库的命令，最后一定要加上分号; 表示这个命令的结束 往文件里写信息的命令： echo “10.154.105.100 dockerhub.sfos.org” » /etc/hosts &gt;&gt;表示追加到文件末尾 &gt;表示覆盖文件 Linux 解压zip文件命令： unzip test.zip /data/temp 统计目录下文件的大小： du -h –max-depth=1 /data &gt; /blackbox/docker_space_infors.txt -h 以k,m,g，t等格式显示 -m 以m的格式显示 -k 以k的格式显示 –max-depth =1 即统计当前目录下文件夹的大小 对文件按某一列排序： sort -h -k1 /blackbox/docker_space_infors.txt -o /blackbox/docker_space_infors.txt -h 按照k,m,g,t等格式排序 -n 按照数字排序 -k1 第一列 -o 输出文件的名字，可以为原文件，这样会把源文件覆盖掉 linux 缺省的运行级，RHS用到的级别如下： 0 - 停机 ，机器关闭。 1 - 单用户模式 。就像Win9x下的安全模式类似 2 - 多用户，但是没有NFS 进入无网络服务的多用户模式 3 - 完全多用户模式 ，是标准的运行级。 4 - 没有用到 ，一般不用，在一些特殊情况下可以用它来做一些事情。例如在笔记本 电脑的电池用尽时，可以切换到这个模式来 5 - X11 ，进到X Window系统了。 6 - 重新启动 ，运行init 6机器就会重启 linux开机后开启守护进程的过程 1.系统加电之后，首先进行的硬件自检，然后是bootloader对系统的初始化，加载内核。 2.启动内核，检测硬件，挂载根文件系统，初始化所有的设备驱动程序和数据结构 3.启动init进程，pid号为1 4.init进程根据/etc/inittab中的initdefault确定系统默认的运行级别 5.执行/etc/rc(n).d中的脚本，如果运行级别是3，那就执行/etc/rc3.d中的脚本 6./etc/rc(n).d中的脚本软连接到/etc/init.d中，S表示start,K 表示stop，是传给init.d的参数，后面的数字表示优先级,数值小的先执行，数值大的后执行。例如S01sysstat表示执行/etc/rc.d/init.d/sysstat start stat xxx 可以查看文件的访问时间 time xx.sh可以看该脚本的执行时间 C 内置库的头文件位置/usr/include/xxx.h 删除7天以上的文件 find . -maxdepth 1 ! -name “develop” -mtime +7 -exec rm -rf {} \\; 指定pip源 pip install -i http://mirrors.xxxx.org/pypi/simple –trusted-host mirrors.xxxx.org requests_toolbelt 可以改后台密码 passwd admin vi模式粘贴乱缩进解决 :set paste 显示前5行后5行 head -n 5 tail -n 5 用法： head -n 5 test.txt 或 cat test.txt| head -n 5 获取随机数 cat /dev/urandom （快） cat /dev/random（慢） cat /dev/urandom | od -x 获取一行随机数，转为16进制 Linux系统下简单模拟高CPU\\高内存\\高负载的方法 CPU 下面命令会创建 CPU 负荷，方法是通过压缩随机数据并将结果发送到 /dev/null： cat /dev/urandom | gzip -9 &gt; /dev/null 如果你想要更大的负荷，或者系统有多个核，那么只需要对数据进行压缩和解压就行了，像这样： cat /dev/urandom | gzip -9 | gzip -d | gzip -9 | gzip -d &gt; /dev/null 按下 CTRL+C 来终止进程。 内存占用 下面命令会减少可用内存的总量。它是通过在内存中创建文件系统然后往里面写文件来实现的。你可以使用任意多的内存，只需要往里面写入更多的文件就行了。 首先，创建一个挂载点，然后将 ramfs 文件系统挂载上去： mkdir z mount -t ramfs ramfs z/ 第二步，使用 dd 在该目录下创建文件。这里我们创建了一个 128M 的文件： dd if=/dev/zero of=z/file bs=1M count=128 文件的大小可以通过下面这些操作符来修改： bs= 块大小。可以是任何数字后面接上 B（表示字节），K（表示 KB），M（ 表示 MB）或者 G（表示 GB）。 count= 要写多少个块。 磁盘 I/O 创建磁盘 I/O 的方法是先创建一个文件，然后使用 for 循环来不停地拷贝它。 下面使用命令 dd 创建了一个全是零的 1G 大小的文件： dd if=/dev/zero of=loadfile bs=1M count=1024 下面命令用 for 循环执行 10 次操作。每次都会拷贝 loadfile 来覆盖 loadfile1： for i in {1…10}; do cp loadfile loadfile1; done 通过修改 {1…10} 中的第二个参数来调整运行时间的长短。（LCTT 译注：你的 Linux 系统中的默认使用的 cp 命令很可能是 cp -i 的别名，这种情况下覆写会提示你输入 y 来确认， 你可以使用 -f参数的 cp 命令来覆盖此行为，或者直接用 /bin/cp 命令。） 若你想要一直运行，直到按下 CTRL+C 来停止，则运行下面命令： while true; do cp loadfile loadfile1; done taskset 可以把进程绑定到指定CPU上 shell文件解释器 #!/usr/bin/env bash #在不同的系统上提供了一些灵活性,但执行结果可能和bash有不同，比如pidof 查询不到执行的常驻脚本，但是ps就可以查到 #！/bin/bash #！/bin/sh 相当于开了POSIX模式的bash,运行的结果和bash可能有不同，比如当某行代码出错时，不继续往下解释,而bash会继续执行。 结论：优先用/bin/bash 卸载内核模块：rmmod 模块名 加载内核模块： insmod 模块名 dmesg 打印内核缓冲区内容，printk输出的内容就在这 dmesg -c 每次打印后清空缓冲区 renice 调整优先级 renice -n 10 -p PID -n 优先级范围-20 ~19 ，数值越低优先级越高 sh xxx.sh 或者./xxx.sh 会起一个进程来执行命令，里面设置的环境变量啥的不会影响外面的环境。 子进程继承父进程的环境变量，不继承父进程的自定义变量。 因此在sh xxx.sh时只会继承环境变量，不会继承自定义变量 而source xxx.sh不会另起进程，所以可以继承自定义变量 环境变量可以传递在不同的语言下都能用的变量 除了在shell下设置环境变量外，C库函数getenv和getenv可以设置获取环境变量 linux fork时有cow（Copy On Write）技术，可以写时再拷贝。 父进程和子进程一起运行，可以用于希望子进程异步的处理其他事物，而父进程按原计划运行。 fork后wait，可以使父进程等待子进程退出后才退出，wait2可以返回子进程退出时的返回码，通过返回码可以实现进程间通信 waitpid可以等待具体的子进程，waitpid2类似 内核有避免竞争的机制，将退出的进程信息都放到队列里，父进程就算处理的慢，也可以按照进程退出的顺序处理子进程的进程信息 但是如果父进程不发wait，信息就会一直在队列里存着，就会成为僵尸进程。所以可以用detach（pid）来起一个线程，专门wait这个子进程，实现子进程父进程分离 看顾进程：master/worker模式，由主进程fork几个worker进程实际处理业务，主进程负责和worker通信，保证子进程可以保持响应。 僵尸进程：子进程先结束了，但是父进程一直没有wait他，也就是没有读取子进程的返回码等信息，导致子进程虽然退出了，但是还有信息残留，死而未僵，所以叫僵尸进程。 孤儿进程： 因父亲进程先退出而导致一个子进程被 init 进程收养的进程为孤儿进程，即孤儿进程的父亲更改为 init 进程，该进程在孤儿进程退出后回收它的内核空间资源 父进程没有时间一直wait子进程退出，这时候可以用信号来实现，当子进程退出时，给父进程一个信号，父进程再wait就可以。但是当短时间内同一个信号来了很多次时，系统处理不过来，后面的几个信号会接不到，所以最好的办法是当第一个信号来时，就通过while循环不断wait，这时就要用非阻塞的wait。 当进程接受到信号时，可以执行：1.忽略2.定制操作3.默认操作 其中Term表示进程立即结束 core表示进程立即结束，并进行核心转储 ign表示忽略该信号 stop表示进程暂停运行 cont表示进程恢复运行 USR1和USR2是用户自定义的信号 构造一个守护进程： def daemonize_app if RUBY_VERSION &lt; &quot;1.9&quot; exit if fork Process.setsid exit if fork Dir.chdir &quot;/&quot; STDIN.reopen &quot;/dev/null&quot; STDOUT.reopen &quot;/dev/null&quot; , &quot;a&quot; STDERR.reopen &quot;/dev/null&quot; , &quot;a&quot; else Process.daemon end end 第一次fork父进程退出，进程成为孤儿进程 process.setsid把子进程设为进程组长和会话组长，用于脱离父进程的控制，不会因为父进程的信号而终止。但是由于是会话组长，所以还是可能依附于一个终端 第二次fork，又衍生一个子进程，这个子进程不是会话组长，所以也拜托了终端的限制，彻底成为没人管的守护进程。 对一个会话组发的信号会发给会话内的所有进程组，进程组又会发给所有进程。 C中的system函数的内部实现就是fork+exec 先fork出来一个子进程再执行exec，exec函数会取代执行他的进程，一旦exec函数执行成功, 它就不会返回了, 进程结束. 但是如果exec函数执行失败, 它会返回失败的信息, 父进程可以wait来获取返回码。 查看centos版本 cat /etc/redhat-release linux加载环境变量 临时生效可以export 想要永久生效，要修改/etc/profile文件，或者在/etc/profile.d目录下，增加个脚本，里面加上export LIBRARY_PATH=libtest1:libtest2:$LIBRARY_PATH 类似的命令 想要立即生效就source /etc/profile否则得等到再次登录时生效 vim和vi是两套东西，vim是vi的改进版 vim使用的技巧： 进到文件里之后输入：%d，再保存即可清空整个文件 linux man命令分区 想查哪个分区，就man 2 read 1 用户命令， 可由任何人启动的。 2 系统调用， 即由内核提供的函数。 3 例程， 即库函数，比如标准C库libc。 4 设备， 即/dev目录下的特殊文件。 5 文件格式描述， 例如/etc/passwd。 6 游戏， 不用解释啦！ 7 杂项， 例如宏命令包、惯例等。 8 系统管理员工具， 只能由root启动。 9 其他（Linux特定的）， 用来存放内核例行程序的文档。 n 新文档， 可能要移到更适合的领域。 linux C库函数的头文件都在/usr/include下 linux设置系统时间： date -s “20210909 10:38:50” hwclock –systohc（同步系统时间到硬件） Text file busy 发生此错误是因为当前文件已被占用，找出占用该文件的进程并杀死就可以了。 使用到的命令如下： 找出占用该文件的进程： fuser 文件名 杀死占用该文件的进程 kill -9 进程id linux 软连接要用绝对路径 arping可以ping ip返回mac，或者ping mac返回IP 设置dns服务器 在/etc/resolve.conf里添加类似这样的语句： nameserver 200.200.10.199即可 /proc/locks 保存当前被锁的inode节点 查看linux版本号： uname -a 或cat /proc/version 查看一个进程占用的物理内存： cat /proc/13137/status |grep VmRSS ps -aux |grep xxx 查看进程运行时间： 1.ps -eo pid,tty,user,comm,lstart,etime|grep xxx 参数说明： pid：进程ID tty：终端 user：用户 comm：进程名 lstart：开始时间 etime：运行时间 2.ps -ef |grep xxx USER:用户名 %CPU:进程占用的CPU百分比 %MEM:占用内存的百分比 VSZ:该进程使用的虚拟內存量（KB） RSS:该进程占用的固定內存量（KB）（驻留中页的数量） STAT:进程的状态 START:该进程被触发启动时间 TIME:该进程实际使用CPU运行的时间 利用strace可以查看进程相关的信息 例如进程被谁杀了 strace -T -tt -e trace=all -p pid ~/.ssh/known_hosts文件 当A第一次通过ssh连接到B，B会将公钥传给A，存进known_hosts文件中。下次A再sshB时，B还会再传一个公钥给A，拿这个公钥和known_hosts中的公钥作对比，一样的话就验证通过，可以连接，否则不能连接。 如果有验证失败的报错：Host key verification failed。有两种解决办法： 1.手动把A中的known_hosts里记录B 的公钥删掉，然后再手动登录一次，生成正确的密钥，以后就可以直接登录了 2.如果是自动化部署的话，可以设置配置文件，让ssh不做known_hosts的校验（安全性会降低）： vi ~/.ssh/config //编辑配置文件 添加以下两行代码： StrictHostKeyChecking no UserKnownHostsFile /dev/null","headline":"linux知识","mainEntityOfPage":{"@type":"WebPage","@id":"/jekyll-theme-yat/linux/2022/07/14/linux.html"},"url":"/jekyll-theme-yat/linux/2022/07/14/linux.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="shortcut icon" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/jekyll-theme-yat/assets/css/main.css">
+  <script src="/jekyll-theme-yat/assets/js/main.js"></script><link type="application/atom+xml" rel="alternate" href="/jekyll-theme-yat/feed.xml" title="Lil Bear's blog">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/languages/go.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<header class="site-header " role="banner">
+
+  <div class="wrapper">
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/jekyll-theme-yat/">
+  <img class="site-favicon" title="Lil Bear's blog" src="" onerror="this.style.display='none'">
+  Lil Bear's blog
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+<a class="page-link" href="/jekyll-theme-yat/about.html">ABOUT</a><a class="page-link" href="/jekyll-theme-yat/archives.html">ARCHIVES</a><a class="page-link" href="/jekyll-theme-yat/categories.html">CATEGORIES</a><a class="page-link" href="/jekyll-theme-yat/">HOME</a><a class="page-link" href="/jekyll-theme-yat/tags.html">TAGS</a>
+
+
+
+
+
+
+
+
+
+<span class="page-link">
+
+
+
+<div id="google_translate_element" style="display: none;">
+</div>
+
+<span class="ct-language">
+  <ul class="list-unstyled ct-language-dropdown">
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="en">
+          
+          <img src="https://cdn.countryflags.com/thumbs/united-states-of-america/flag-400.png" title="English">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="fr">
+          
+          <img src="https://cdn.countryflags.com/thumbs/france/flag-400.png" title="French">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="zh-CN">
+          
+          <img src="https://cdn.countryflags.com/thumbs/china/flag-400.png" title="Chinese(Simple)">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ja">
+          
+          <img src="https://cdn.countryflags.com/thumbs/japan/flag-400.png" title="Japanese">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ko">
+          
+          <img src="https://cdn.countryflags.com/thumbs/south-korea/flag-400.png" title="Korean">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ru">
+          
+          <img src="https://cdn.countryflags.com/thumbs/russia/flag-400.png" title="Russian">
+          
+        </a>
+      </li>
+    
+  </ul>
+</span>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    autoDisplay: false,
+    layout: google.translate.TranslateElement.InlineLayout.VERTICAL
+  }, 'google_translate_element');
+
+  // Links to cross-origin destinations are unsafe
+  var gll = document.getElementsByClassName('goog-logo-link')[0];
+  if (gll) {
+    gll.setAttribute('rel', 'noopener');
+  }
+
+  function restoreLang() {
+    var iframe = document.getElementsByClassName('goog-te-banner-frame')[0];
+    if (!iframe) return;
+
+    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+    var restore_el = innerDoc.getElementsByTagName("button");
+
+    for (var i = 0; i < restore_el.length; i++) {
+      if (restore_el[i].id.indexOf("restore") >= 0) {
+        restore_el[i].click();
+        var close_el = innerDoc.getElementsByClassName("goog-close-link");
+        close_el[0].click();
+        return;
+      }
+    }
+  }
+
+  function triggerHtmlEvent(element, eventName) {
+    var event;
+    if (document.createEvent) {
+      event = document.createEvent('HTMLEvents');
+      event.initEvent(eventName, true, true);
+      element.dispatchEvent(event);
+    } else {
+      event = document.createEventObject();
+      event.eventType = eventName;
+      element.fireEvent('on' + event.eventType, event);
+    }
+  }
+
+  var googleCombo = document.querySelector("select.goog-te-combo");
+  var langSelect = document.querySelector('.ct-language');
+  langSelect.addEventListener('click', function(event) {
+    if (!event.target) {
+      return;
+    }
+
+    var selected = document.querySelector('.ct-language .ct-language-selected');
+    if (selected) {
+      selected.classList.remove('ct-language-selected');
+    }
+
+    var target = event.target;
+    while (target && target !== langSelect ) {
+      if (target.matches('.lang-select')) {
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    if (target && target.matches('.lang-select')) {
+      var lang = target.getAttribute('data-lang');
+      if (googleCombo.value == lang) {
+        restoreLang();
+      } else {
+        target.parentElement.classList.add('ct-language-selected');
+        googleCombo.value = lang;
+        triggerHtmlEvent(googleCombo, 'change');
+      }
+    }
+
+    event.preventDefault();
+  });
+}
+</script>
+
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</span>
+</div>
+        </nav>
+</div>
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<div id="click-to-top" class="click-to-top">
+  <i class="fa fa-arrow-up"></i>
+</div>
+<script>
+  (function () {
+    const clickToTop = document.getElementById('click-to-top');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        clickToTop.classList.add('show')
+      }else {
+        clickToTop.classList.remove('show')
+      }
+    });
+    clickToTop.addEventListener('click', () => {
+      window.smoothScrollTo(0);
+    });
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+
+
+
+
+
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">linux知识</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2022-07-14T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> Jul 14, 2022
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 5 mins</span>
+  </p>
+<div class="post-tags"><a class="post-tag" href="/jekyll-theme-yat/tags.html#linux">#linux</a></div></header>
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p>看时间date</p>
+
+<p>看时间戳 date +%s</p>
+
+<p><strong>dnf</strong></p>
+
+<p>是centos的包管理工具</p>
+
+<p><code class="language-plaintext highlighter-rouge">vi /etc/yum.repos.d/CentOS-AF.repo</code>配置好源之后， 可以直接<code class="language-plaintext highlighter-rouge">dnf install</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">ls -lR|grep "^-"|wc -l</code> 可以统计当前目录及子目录下所有文件的个数</p>
+
+<p><code class="language-plaintext highlighter-rouge">**ls -lR** | grep "^d"| wc -l</code> 可以统计当前目录及子目录下所有目录的个数</p>
+
+<p>R表示递归，去掉R只统计当前目录</p>
+
+<p><code class="language-plaintext highlighter-rouge">**ls -lrt** /tmp | wc -l</code> 可以统计指定的目录</p>
+
+<p><code class="language-plaintext highlighter-rouge">ps -efww|grep sendmail |grep -v grep|cut -c 9-15|xargs kill -9</code> 杀掉同名进程sendmail</p>
+
+<p><strong>用scp远程传输文件</strong>:</p>
+
+<p><code class="language-plaintext highlighter-rouge">scp -P 22345 afwiki_hci.tar admin@10.154.105.100:/data/</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">rpm -qf /sfos/system/resource/lang/alarmd/alarmd.ini</code>可以查安装包</p>
+
+<p><strong>lsof</strong></p>
+
+<p>可以看文件被谁引用，由于unix一切皆文件，所以也可以看端口被谁监听</p>
+
+<p><code class="language-plaintext highlighter-rouge">lsof -n |grep 80</code></p>
+
+<p>还可以看某个进程都打开了哪些文件：</p>
+
+<p><code class="language-plaintext highlighter-rouge">lsof -p pid</code></p>
+
+<p><strong>netstat</strong> -anp也可以看端口监听情况</p>
+
+<p><strong><code class="language-plaintext highlighter-rouge">ps -auxf |grep dap</code></strong>可以看进程详细信息包括谁是谁的子进程等</p>
+
+<h2 id="添加定时脚本">添加定时脚本</h2>
+<p>Linux定时脚本是/etc/crontab这个脚本文件，linux每分钟都会调用这个这个脚本，执行其中的命令。</p>
+
+<p><img src="/assets/images/crontab.PNG" alt=""></p>
+
+<p>可以直接在这里面添加命令，如</p>
+
+<p>* * * * * root /etc/init.d/smb restart</p>
+
+<p>也可以添加脚本</p>
+
+<p>* * * * *root test.sh</p>
+
+<p>也可以像图片中那样，执行整个文件夹里的文件，用run-parts 命令即可</p>
+
+<p>前面的定时时间设置也比较简单，参考给出的介绍即可。</p>
+
+<p>需要注意的是</p>
+
+<p>1.如果想固定的一个时间执行，比如9点，或星期六，那就再对应的位置直接填数字即可，如果是多个时间点，比如7点和9点，中间用逗号隔开写就行</p>
+
+<p>2.如果是想表示每隔多少时间执行一次，比如每隔两天，可以在对应的位置用*/2表示</p>
+
+<p>3.如果是想表示时间段，比如5点到9点，可以用5-9表示</p>
+
+<p>Linux默认创建的文件都是文本文件，只是可读可写的（rw），并没有可执行的权限(x)，因此创建的脚本文件需要手动加权限</p>
+
+<p>chmod 755 test.sh</p>
+
+<p>为整个目录加权限</p>
+
+<p>chmod -R 755 /data</p>
+
+<p>数字代表的意思：</p>
+
+<p>r:4 可读</p>
+
+<p>w:2 可写</p>
+
+<p>x:1 可执行</p>
+
+<h4 id="ls--l-可以查看权限和修改时间文件大小等详细信息">ls -l 可以查看权限和修改时间，文件大小等详细信息</h4>
+
+<h4 id="查看各磁盘分区情况">查看各磁盘分区情况：</h4>
+
+<p>fdisk -l</p>
+
+<h4 id="下载对应网站的某个文件">下载对应网站的某个文件：</h4>
+<p>curl -O 10.154.105.100:5000/opt/start_wiki.sh</p>
+
+<h4 id="启动服务">启动服务：</h4>
+
+<p>/etc/init.d/apache start</p>
+
+<p>或者</p>
+
+<p>service apache start</p>
+
+<h4 id="最新的linux使用了systemd这个守护进程来实现对服务的管理">最新的linux使用了systemd这个守护进程来实现对服务的管理</h4>
+
+<p>命令：systemctl start apache</p>
+
+<h4 id="杀死一个进程">杀死一个进程：</h4>
+<p>kill -9 pid</p>
+
+<h4 id="手动挂载磁盘后要将挂载信息写入etcfstab中否则下次开机挂载就没了">手动挂载磁盘后，要将挂载信息写入/etc/fstab中，否则下次开机挂载就没了：</h4>
+<p>/dev/vg-data/lv-data    /data                   ext4    defaults        0 0</p>
+
+<h4 id="数据库的命令最后一定要加上分号-表示这个命令的结束">数据库的命令，最后一定要加上分号; 表示这个命令的结束</h4>
+
+<h4 id="往文件里写信息的命令">往文件里写信息的命令：</h4>
+<p>echo “10.154.105.100  dockerhub.sfos.org” » /etc/hosts</p>
+
+<p>&gt;&gt;表示追加到文件末尾</p>
+
+<p>&gt;表示覆盖文件</p>
+
+<h4 id="linux-解压zip文件命令">Linux 解压zip文件命令：</h4>
+<p>unzip test.zip /data/temp</p>
+
+<h4 id="统计目录下文件的大小">统计目录下文件的大小：</h4>
+<p>du -h –max-depth=1 /data &gt; /blackbox/docker_space_infors.txt</p>
+
+<p>-h 以k,m,g，t等格式显示</p>
+
+<p>-m 以m的格式显示</p>
+
+<p>-k 以k的格式显示</p>
+
+<p>–max-depth =1 即统计当前目录下文件夹的大小</p>
+
+<h4 id="对文件按某一列排序">对文件按某一列排序：</h4>
+<p>sort -h -k1 /blackbox/docker_space_infors.txt -o /blackbox/docker_space_infors.txt</p>
+
+<p>-h 按照k,m,g,t等格式排序</p>
+
+<p>-n 按照数字排序</p>
+
+<p>-k1 第一列</p>
+
+<p>-o 输出文件的名字，可以为原文件，这样会把源文件覆盖掉</p>
+
+<h4 id="linux-缺省的运行级rhs用到的级别如下">linux 缺省的运行级，RHS用到的级别如下：</h4>
+
+<p>0 - 停机 ，机器关闭。</p>
+
+<p>1 - 单用户模式 。就像Win9x下的安全模式类似</p>
+
+<p>2 - 多用户，但是没有NFS  进入无网络服务的多用户模式</p>
+
+<p>3 - 完全多用户模式 ，是标准的运行级。</p>
+
+<p>4 - 没有用到 ，一般不用，在一些特殊情况下可以用它来做一些事情。例如在笔记本 电脑的电池用尽时，可以切换到这个模式来</p>
+
+<p>5 - X11   ，进到X Window系统了。</p>
+
+<p>6 - 重新启动 ，运行init 6机器就会重启</p>
+
+<h4 id="linux开机后开启守护进程的过程">linux开机后开启守护进程的过程</h4>
+<p>1.系统加电之后，首先进行的硬件自检，然后是bootloader对系统的初始化，加载内核。</p>
+
+<p>2.启动内核，检测硬件，挂载根文件系统，初始化所有的设备驱动程序和数据结构</p>
+
+<p>3.启动init进程，pid号为1</p>
+
+<p>4.init进程根据/etc/inittab中的initdefault确定系统默认的运行级别</p>
+
+<p>5.执行/etc/rc(n).d中的脚本，如果运行级别是3，那就执行/etc/rc3.d中的脚本</p>
+
+<p>6./etc/rc(n).d中的脚本软连接到/etc/init.d中，S表示start,K 表示stop，是传给init.d的参数，后面的数字表示优先级,数值小的先执行，数值大的后执行。例如S01sysstat表示执行/etc/rc.d/init.d/sysstat start</p>
+
+<h4 id="stat-xxx-可以查看文件的访问时间">stat xxx 可以查看文件的访问时间</h4>
+
+<h4 id="time-xxsh可以看该脚本的执行时间">time xx.sh可以看该脚本的执行时间</h4>
+
+<h4 id="c-内置库的头文件位置usrincludexxxh">C 内置库的头文件位置/usr/include/xxx.h</h4>
+
+<h4 id="删除7天以上的文件">删除7天以上的文件</h4>
+
+<p>find . -maxdepth 1 ! -name “develop” -mtime +7 -exec rm -rf {} \;</p>
+
+<h4 id="指定pip源">指定pip源</h4>
+
+<p>pip install -i http://mirrors.xxxx.org/pypi/simple –trusted-host mirrors.xxxx.org requests_toolbelt</p>
+
+<h4 id="可以改后台密码">可以改后台密码</h4>
+<p>passwd admin</p>
+
+<h4 id="vi模式粘贴乱缩进解决">vi模式粘贴乱缩进解决</h4>
+<p>:set paste</p>
+
+<h4 id="显示前5行后5行">显示前5行后5行</h4>
+<p>head -n  5
+tail -n 5
+用法： head -n 5 test.txt
+或 cat test.txt| head -n 5</p>
+
+<h4 id="获取随机数">获取随机数</h4>
+<p>cat /dev/urandom （快）
+cat /dev/random（慢）</p>
+
+<h4 id="cat-devurandom--od--x">cat /dev/urandom | od -x</h4>
+<p>获取一行随机数，转为16进制</p>
+
+<h4 id="linux系统下简单模拟高cpu高内存高负载的方法">Linux系统下简单模拟高CPU\高内存\高负载的方法</h4>
+<h6 id="cpu">CPU</h6>
+
+<p>下面命令会创建 CPU 负荷，方法是通过压缩随机数据并将结果发送到 /dev/null：</p>
+
+<p><code class="language-plaintext highlighter-rouge">cat /dev/urandom | gzip -9 &gt; /dev/null</code></p>
+
+<p>如果你想要更大的负荷，或者系统有多个核，那么只需要对数据进行压缩和解压就行了，像这样：</p>
+
+<p><code class="language-plaintext highlighter-rouge">cat /dev/urandom | gzip -9 | gzip -d | gzip -9 | gzip -d &gt; /dev/null</code></p>
+
+<p>按下 CTRL+C 来终止进程。</p>
+
+<h6 id="内存占用">内存占用</h6>
+
+<p>下面命令会减少可用内存的总量。它是通过在内存中创建文件系统然后往里面写文件来实现的。你可以使用任意多的内存，只需要往里面写入更多的文件就行了。</p>
+
+<p>首先，创建一个挂载点，然后将 ramfs 文件系统挂载上去：</p>
+
+<p><code class="language-plaintext highlighter-rouge">mkdir z</code>
+<code class="language-plaintext highlighter-rouge">mount -t ramfs ramfs z/</code></p>
+
+<p>第二步，使用 dd 在该目录下创建文件。这里我们创建了一个 128M 的文件：</p>
+
+<p><code class="language-plaintext highlighter-rouge">dd if=/dev/zero of=z/file bs=1M count=128</code></p>
+
+<p>文件的大小可以通过下面这些操作符来修改：</p>
+
+<p>bs= 块大小。可以是任何数字后面接上 B（表示字节），K（表示 KB），M（ 表示 MB）或者 G（表示 GB）。
+count= 要写多少个块。</p>
+
+<h6 id="磁盘-io">磁盘 I/O</h6>
+
+<p>创建磁盘 I/O 的方法是先创建一个文件，然后使用 for 循环来不停地拷贝它。</p>
+
+<p>下面使用命令 dd 创建了一个全是零的 1G 大小的文件：</p>
+
+<p><code class="language-plaintext highlighter-rouge">dd if=/dev/zero of=loadfile bs=1M count=1024</code></p>
+
+<p>下面命令用 for 循环执行 10 次操作。每次都会拷贝 loadfile 来覆盖 loadfile1：</p>
+
+<p><code class="language-plaintext highlighter-rouge">for i in {1…10}; do cp loadfile loadfile1; done</code></p>
+
+<p>通过修改 {1…10} 中的第二个参数来调整运行时间的长短。（LCTT 译注：你的 Linux 系统中的默认使用的 cp 命令很可能是 cp -i 的别名，这种情况下覆写会提示你输入 y 来确认，</p>
+
+<p>你可以使用 -f参数的 cp 命令来覆盖此行为，或者直接用 /bin/cp 命令。）</p>
+
+<p>若你想要一直运行，直到按下 CTRL+C 来停止，则运行下面命令：</p>
+
+<p><code class="language-plaintext highlighter-rouge">while true; do cp loadfile loadfile1; done</code></p>
+
+<h4 id="taskset-可以把进程绑定到指定cpu上">taskset 可以把进程绑定到指定CPU上</h4>
+
+<h3 id="shell文件解释器">shell文件解释器</h3>
+<p>#!/usr/bin/env bash #在不同的系统上提供了一些灵活性,但执行结果可能和bash有不同，比如pidof 查询不到执行的常驻脚本，但是ps就可以查到
+#！/bin/bash 
+#！/bin/sh 相当于开了POSIX模式的bash,运行的结果和bash可能有不同，比如当某行代码出错时，不继续往下解释,而bash会继续执行。</p>
+
+<p>结论：优先用/bin/bash</p>
+
+<p>卸载内核模块：rmmod  模块名
+加载内核模块： insmod  模块名</p>
+
+<p>dmesg 打印内核缓冲区内容，printk输出的内容就在这
+dmesg -c 每次打印后清空缓冲区</p>
+
+<h4 id="renice-调整优先级">renice 调整优先级</h4>
+<p>renice -n 10 -p PID
+-n 优先级范围-20 ~19 ，数值越低优先级越高</p>
+
+<h4 id="sh-xxxsh-或者xxxsh">sh xxx.sh 或者./xxx.sh</h4>
+<p>会起一个进程来执行命令，里面设置的环境变量啥的不会影响外面的环境。</p>
+
+<h4 id="子进程继承父进程的环境变量不继承父进程的自定义变量">子进程继承父进程的环境变量，不继承父进程的自定义变量。</h4>
+<p>因此在sh xxx.sh时只会继承环境变量，不会继承自定义变量
+而source xxx.sh不会另起进程，所以可以继承自定义变量</p>
+
+<h4 id="环境变量可以传递在不同的语言下都能用的变量">环境变量可以传递在不同的语言下都能用的变量</h4>
+<p>除了在shell下设置环境变量外，C库函数getenv和getenv可以设置获取环境变量</p>
+
+<h4 id="linux-fork时有cowcopy-on-write技术可以写时再拷贝">linux fork时有cow（Copy On Write）技术，可以写时再拷贝。</h4>
+
+<p>父进程和子进程一起运行，可以用于希望子进程异步的处理其他事物，而父进程按原计划运行。
+fork后wait，可以使父进程等待子进程退出后才退出，wait2可以返回子进程退出时的返回码，通过返回码可以实现进程间通信</p>
+
+<p>waitpid可以等待具体的子进程，waitpid2类似
+内核有避免竞争的机制，将退出的进程信息都放到队列里，父进程就算处理的慢，也可以按照进程退出的顺序处理子进程的进程信息</p>
+
+<p>但是如果父进程不发wait，信息就会一直在队列里存着，就会成为僵尸进程。所以可以用detach（pid）来起一个线程，专门wait这个子进程，实现子进程父进程分离</p>
+
+<p>看顾进程：master/worker模式，由主进程fork几个worker进程实际处理业务，主进程负责和worker通信，保证子进程可以保持响应。</p>
+
+<p>僵尸进程：子进程先结束了，但是父进程一直没有wait他，也就是没有读取子进程的返回码等信息，导致子进程虽然退出了，但是还有信息残留，死而未僵，所以叫僵尸进程。</p>
+
+<p>孤儿进程： 因父亲进程先退出而导致一个子进程被 init 进程收养的进程为孤儿进程，即孤儿进程的父亲更改为 init 进程，该进程在孤儿进程退出后回收它的内核空间资源</p>
+
+<p>父进程没有时间一直wait子进程退出，这时候可以用信号来实现，当子进程退出时，给父进程一个信号，父进程再wait就可以。但是当短时间内同一个信号来了很多次时，系统处理不过来，后面的几个信号会接不到，所以最好的办法是当第一个信号来时，就通过while循环不断wait，这时就要用非阻塞的wait。</p>
+
+<p>当进程接受到信号时，可以执行：1.忽略2.定制操作3.默认操作</p>
+
+<p><img src="/assets/images/signal1.PNG" alt=""></p>
+
+<p>其中Term表示进程立即结束</p>
+
+<p>core表示进程立即结束，并进行核心转储</p>
+
+<p>ign表示忽略该信号</p>
+
+<p>stop表示进程暂停运行</p>
+
+<p>cont表示进程恢复运行</p>
+
+<p>USR1和USR2是用户自定义的信号</p>
+
+<h4 id="构造一个守护进程">
+<strong>构造一个守护进程</strong>：</h4>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">daemonize_app</span>
+    <span class="k">if</span> <span class="no">RUBY_VERSION</span> <span class="o">&lt;</span> <span class="s2">"1.9"</span>
+        <span class="nb">exit</span> <span class="k">if</span> <span class="nb">fork</span>
+        <span class="no">Process</span><span class="p">.</span><span class="nf">setsid</span>
+        <span class="nb">exit</span> <span class="k">if</span> <span class="nb">fork</span>
+        <span class="no">Dir</span><span class="p">.</span><span class="nf">chdir</span> <span class="s2">"/"</span>
+        <span class="no">STDIN</span><span class="p">.</span><span class="nf">reopen</span> <span class="s2">"/dev/null"</span>
+        <span class="no">STDOUT</span><span class="p">.</span><span class="nf">reopen</span> <span class="s2">"/dev/null"</span> <span class="p">,</span> <span class="s2">"a"</span>
+        <span class="no">STDERR</span><span class="p">.</span><span class="nf">reopen</span> <span class="s2">"/dev/null"</span> <span class="p">,</span> <span class="s2">"a"</span>
+    <span class="k">else</span>
+        <span class="no">Process</span><span class="p">.</span><span class="nf">daemon</span>
+    <span class="k">end</span>
+<span class="k">end</span>
+        
+</code></pre></div></div>
+
+<p>第一次fork父进程退出，进程成为孤儿进程</p>
+
+<p>process.setsid把子进程设为进程组长和会话组长，用于脱离父进程的控制，不会因为父进程的信号而终止。但是由于是会话组长，所以还是可能依附于一个终端</p>
+
+<p>第二次fork，又衍生一个子进程，这个子进程不是会话组长，所以也拜托了终端的限制，彻底成为没人管的守护进程。</p>
+
+<p>对一个会话组发的信号会发给会话内的所有进程组，进程组又会发给所有进程。</p>
+
+<p>C中的system函数的内部实现就是fork+exec</p>
+
+<p>先fork出来一个子进程再执行exec，exec函数会取代执行他的进程，一旦exec函数执行成功, 它就不会返回了, 进程结束.   但是如果exec函数执行失败, 它会返回失败的信息,  父进程可以wait来获取返回码。</p>
+
+<h4 id="查看centos版本"><strong>查看centos版本</strong></h4>
+
+<p>cat /etc/redhat-release</p>
+
+<h4 id="linux加载环境变量"><strong>linux加载环境变量</strong></h4>
+
+<p>临时生效可以export</p>
+
+<p>想要永久生效，要修改/etc/profile文件，或者在/etc/profile.d目录下，增加个脚本，里面加上export LIBRARY_PATH=libtest1:libtest2:$LIBRARY_PATH 类似的命令</p>
+
+<p>想要立即生效就source /etc/profile否则得等到再次登录时生效</p>
+
+<p>vim和vi是两套东西，vim是vi的改进版</p>
+
+<h4 id="vim使用的技巧">
+<strong>vim使用的技巧</strong>：</h4>
+
+<p>进到文件里之后输入：%d，再保存即可清空整个文件</p>
+
+<h4 id="linux-man命令分区"><strong>linux man命令分区</strong></h4>
+
+<p>想查哪个分区，就man 2 read</p>
+
+<p>1 用户命令， 可由任何人启动的。</p>
+
+<p>2 系统调用， 即由内核提供的函数。</p>
+
+<p>3 例程， 即库函数，比如标准C库libc。</p>
+
+<p>4 设备， 即/dev目录下的特殊文件。</p>
+
+<p>5 文件格式描述， 例如/etc/passwd。</p>
+
+<p>6 游戏， 不用解释啦！</p>
+
+<p>7 杂项， 例如宏命令包、惯例等。</p>
+
+<p>8 系统管理员工具， 只能由root启动。</p>
+
+<p>9 其他（Linux特定的）， 用来存放内核例行程序的文档。</p>
+
+<p>n 新文档， 可能要移到更适合的领域。</p>
+
+<h4 id="linux-c库函数的头文件都在usrinclude下"><strong>linux C库函数的头文件都在/usr/include下</strong></h4>
+
+<h4 id="linux设置系统时间">
+<strong>linux设置系统时间</strong>：</h4>
+
+<p>date -s “20210909 10:38:50”</p>
+
+<p>hwclock –systohc（同步系统时间到硬件）</p>
+
+<h4 id="text-file-busy"><strong>Text file busy</strong></h4>
+
+<p>发生此错误是因为当前文件已被占用，找出占用该文件的进程并杀死就可以了。</p>
+
+<p>使用到的命令如下：</p>
+
+<p>找出占用该文件的进程：</p>
+
+<p>fuser 文件名</p>
+
+<p>杀死占用该文件的进程</p>
+
+<p>kill -9 进程id</p>
+
+<h4 id="linux-软连接要用绝对路径">linux 软连接要用绝对路径</h4>
+
+<h4 id="arping可以ping-ip返回mac或者ping-mac返回ip">arping可以ping ip返回mac，或者ping mac返回IP</h4>
+
+<h4 id="设置dns服务器">设置dns服务器</h4>
+
+<p>在/etc/resolve.conf里添加类似这样的语句：</p>
+
+<p>nameserver 200.200.10.199即可</p>
+
+<h4 id="proclocks"><strong>/proc/locks</strong></h4>
+
+<p>保存当前被锁的inode节点</p>
+
+<h4 id="查看linux版本号">
+<strong>查看linux版本号</strong>：</h4>
+
+<p>uname -a</p>
+
+<p>或cat /proc/version</p>
+
+<h4 id="查看一个进程占用的物理内存">
+<strong>查看一个进程占用的物理内存</strong>：</h4>
+
+<p><code class="language-plaintext highlighter-rouge">cat /proc/13137/status |grep VmRSS</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">ps -aux |grep xxx</code></p>
+
+<h4 id="查看进程运行时间">
+<strong>查看进程运行时间</strong>：</h4>
+
+<p>1.<code class="language-plaintext highlighter-rouge">ps -eo pid,tty,user,comm,lstart,etime|grep xxx</code></p>
+
+<p>参数说明：</p>
+
+<p>pid：进程ID</p>
+
+<p>tty：终端</p>
+
+<p>user：用户</p>
+
+<p>comm：进程名</p>
+
+<p>lstart：开始时间</p>
+
+<p>etime：运行时间</p>
+
+<p>2.<code class="language-plaintext highlighter-rouge">ps -ef |grep xxx</code></p>
+
+<p>USER:用户名</p>
+
+<p>%CPU:进程占用的CPU百分比</p>
+
+<p>%MEM:占用内存的百分比</p>
+
+<p>VSZ:该进程使用的虚拟內存量（KB）</p>
+
+<p>RSS:该进程占用的固定內存量（KB）（驻留中页的数量）</p>
+
+<p>STAT:进程的状态</p>
+
+<p>START:该进程被触发启动时间</p>
+
+<p>TIME:该进程实际使用CPU运行的时间</p>
+
+<h4 id="利用strace可以查看进程相关的信息"><strong>利用strace可以查看进程相关的信息</strong></h4>
+
+<p>例如进程被谁杀了</p>
+
+<p>strace -T -tt -e trace=all -p pid</p>
+
+<h3 id="sshknown_hosts文件">~/.ssh/known_hosts文件</h3>
+
+<p>当A第一次通过ssh连接到B，B会将公钥传给A，存进known_hosts文件中。下次A再sshB时，B还会再传一个公钥给A，拿这个公钥和known_hosts中的公钥作对比，一样的话就验证通过，可以连接，否则不能连接。</p>
+
+<p>如果有验证失败的报错：Host key verification failed。有两种解决办法：</p>
+
+<p>1.手动把A中的known_hosts里记录B 的公钥删掉，然后再手动登录一次，生成正确的密钥，以后就可以直接登录了</p>
+
+<p>2.如果是自动化部署的话，可以设置配置文件，让ssh不做known_hosts的校验（安全性会降低）：</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>vi ~/.ssh/config      //编辑配置文件
+
+添加以下两行代码：
+StrictHostKeyChecking no 
+UserKnownHostsFile /dev/null
+</code></pre></div></div>
+
+
+
+    </div>
+
+</article>
+<div class="post-nav">
+<a class="previous" href="/jekyll-theme-yat/%E7%BC%96%E8%AF%91/2022/07/13/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86.html" title="编译相关知识">编译相关知识</a><a class="next" href="/jekyll-theme-yat/%E7%BD%91%E7%BB%9C/2022/07/14/network.html" title="网络知识">网络知识</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/jekyll-theme-yat/c%E8%AF%AD%E8%A8%80/2022/07/12/so%E5%8A%A0%E8%BD%BD.html" title="网络知识">C语言程序使用so</a></li>
+<li><a class="post-link" href="/jekyll-theme-yat/markdown/2016/01/01/another-test-markdown.html" title="网络知识">Another test markdown</a></li>
+<li><a class="post-link" href="/jekyll-theme-yat/jekyll/2018/12/07/welcome-to-jekyll.html" title="网络知识">Welcome to Jekyll!</a></li>
+<li><a class="post-link" href="/jekyll-theme-yat/c%E8%AF%AD%E8%A8%80/2022/07/12/C%E8%AF%AD%E8%A8%80%E9%80%9A%E7%94%A8%E7%9F%A5%E8%AF%86.html" title="网络知识">C语言基础知识</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --><style type="text/css" media="screen">
+.post-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+</style>
+
+<div class="post-menu">
+  <div class="post-menu-title">TOC</div>
+  <div class="post-menu-content"></div>
+</div>
+
+<script>
+  function generateContent() {
+    var menu = document.querySelector(".post-menu");
+    var menuContent =  menu.querySelector(".post-menu-content");
+    var headings = document.querySelector(".post-content").querySelectorAll("h2, h3, h4, h5, h6");
+
+    // Hide menu when no headings
+    if (headings.length === 0) {
+      return menu.style.display = "none";
+    }
+
+    // Generate post menu
+    var menuHTML = '';
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      menuHTML += (
+        '<li class="h-' + h.tagName.toLowerCase() + '">'
+        + '<a href="#h-' + h.getAttribute('id') + '">' + h.textContent + '</a></li>');
+    }
+
+    menuContent.innerHTML = '<ul>' + menuHTML + '</ul>';
+
+    // The header element
+    var header = document.querySelector('header.site-header');
+
+    function doMenuCollapse(index, over_items) {
+      var items = menuContent.firstChild.children;
+
+      if (over_items == undefined) {
+        over_items = 20;
+      }
+
+      if (items.length < over_items) {
+        return;
+      }
+
+      var activeItem = items[index];
+      var beginItem = activeItem
+      var endItem = activeItem
+      var beginIndex = index;
+      var endIndex = index + 1;
+      while (beginIndex >= 0
+        && !items[beginIndex].classList.contains('h-h2')) {
+        beginIndex -= 1;
+      }
+      while (endIndex < items.length
+        && !items[endIndex].classList.contains('h-h2')) {
+        endIndex += 1;
+      }
+      for (var i = 0; i < beginIndex; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+      for (var i = beginIndex + 1; i < endIndex; i++) {
+        item = items[i]
+        // if (!item.classList.contains('h-h2')) {
+          item.style.display = '';
+        // }
+      }
+      for (var i = endIndex; i < items.length; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+    }
+
+    // Init menu collapsed
+    doMenuCollapse(-1);
+
+    // Active the menu item
+    window.addEventListener('scroll', function (event) {
+      var lastActive = menuContent.querySelector('.active');
+      var changed = true;
+      var activeIndex = -1;
+      for (var i = headings.length - 1; i >= 0; i--) {
+        var h = headings[i];
+        var headingRect = h.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var headerTop = Math.floor(headerRect.top);
+        var headerHeight = Math.floor(headerRect.height);
+        var headerHeight = headerTop + headerHeight + 20;
+        if (headingRect.top <= headerHeight) {
+          var id = 'h-' + h.getAttribute('id');
+          var a = menuContent.querySelector('a[href="#' + id  + '"]');
+          var curActive = a.parentNode;
+          if (curActive) {
+            curActive.classList.add('active');
+            activeIndex = i;
+          }
+          if (lastActive == curActive) {
+            changed = false;
+          }
+          break;
+        }
+      }
+      if (changed) {
+        if (lastActive) {
+          lastActive.classList.remove('active');
+        }
+        doMenuCollapse(activeIndex);
+      }
+      event.preventDefault();
+    });
+  }
+  generateContent();
+</script>
+</section>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/jekyll-theme-yat/"></data>
+
+  <div class="wrapper">
+    <div class="site-footer-inner">
+<div>Unpublished Work <span class="copyleft">©</span> 2017-2022 Lil bear</div>
+      <div>Powered by <a title="Jekyll is a simple, blog-aware, static site
+      generator." href="https://jekyllrb.com/">Jekyll</a> &amp; <a title="Yat, yet
+      another theme." href="https://github.com/jeffreytse/jekyll-theme-yat">Yat Theme</a>.</div>
+      <div class="footer-col rss-subscribe">Subscribe <a href="/jekyll-theme-yat/feed.xml">via RSS</a>
+</div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

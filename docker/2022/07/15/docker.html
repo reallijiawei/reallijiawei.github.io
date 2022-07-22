@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>docker用法 | Lil Bear’s blog</title>
+<meta name="generator" content="Jekyll v4.2.2">
+<meta property="og:title" content="docker用法">
+<meta name="author" content="Lil bear">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="查看对应的容器日志: docker logs dockerID 重启docker服务: systemctl restart docker 删除容器： docker rm containerID 删除镜像 docker rmi [image] 把镜像保存成压缩包： docker save -o my_ubuntu_v3.tar runoob/ubuntu:v3 导入本地镜像 docker load &lt; xxx.tar 查看容器的具体信息可以用： docker inspect 容器ID 查看docker使用情况 docker stats（持续监控） Docker stats --no-stream(固定输出) Docker stats --no-stream docker_name docker_id （查看具体容器） 更新docker 配置： docker update -m 2g --memory-swap -1 docker_id docker update -m 16g --memery-swap 16g docker_id docker update --cpus=1 查看docker使用cpu,内存情况 命令：docker stats 要静态的显示，并按内存使用多少排列： docker stats --no-stream --format &quot;table \t\t\t&quot; | sort -k 4 -h 查看docker详细配置 docker inspect dockerID | grep IPAddress 重启了宿主机后docker服务没有启动 systemctl start docker启动docker 服务 systemctl enable docker.service 即可设置开机自启动 systemctl list-unit-files 可以查看开机启动的列表 其他的docker容器都可以正常的启动，但是docker-registry-frontend容器启动后却连接不上镜像仓库 查看dockerl logs ，发现显示如下内容 刚开始以为这是登不上的原因，但其实这是这个容器启动的正常显示， Module auth_kerb disabled. To activate the new configuration, you need to run: service apache2 restart 这些并不是错误，只是这个镜像本身把apache2的auth_kerb模块禁用了，如果想启用新的配置就重启apache2服务，其实不用管。 AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.18.0.2. Set the 'ServerName' directive globally to suppress this message 本来以为这句也是错误，但其实也是正常的 因为用 docker inspect dockerID | grep IPAddress ，查看了该docker的IP，确实也是172.18.0.2，说明是对的。 最后当我尝试通过10.154.105.100:5001登陆时，会报错：No route to host，根据这个报错， 通过查看firewall-cmd --state，发现防火墙在开着，猜想可能是防火墙的把访问阻挡住了 用systemctl stop firewalld.service 命令关闭防火墙，问题解决 然后用systemctl disable firewalld.service 命令，阻止防火墙开机启动 另外，centos还有SELINUX服务，也是类似防火墙的服务，需要关闭： getenforce 查看selinux服务是否开启，ENforcing就是开启状态， setenforce 0 可以暂时关闭SELINUX，如果想永久关闭， 需要vi /etc/selinux/config，将SELINUX=enforcing改为SELINUX=disabled，重启后生效 总结： 1.装好linux后要首先关闭防火墙 2.看日志时，主要看报错的error ,其他的warning， fail，disabled，couldn’t find 等提示有可能都是正常的 docker 制作镜像： 1.docker run –net=host –name=test-git -v ~/.ssh:/root/.ssh -v /data2/test/:/data2/test/ -it registry.me/wxhui/xxx-compiler:8025.2 /bin/bash运行起来 2.做修改 3.在宿主机上docker commit dockerID centos:test 修改镜像名称 docker tag imageID xxx/xxxx/xxx-compiler:tag docker commit做的镜像只会保存非映射目录，就是说-v映射的目录不会保存 修改docker默认储存目录 docker的默认储存目录是/var/lib/docker 修改方法如下: 修改docker的systemd的 docker.service的配置文件: systemctl disable docker systemctl enable docker 显示结果 Created symlink from /etc/systemd/system/multi-user.target.wants/docker.service to /usr/lib/systemd/system/docker.service. 修改这个 /usr/lib/systemd/system/docker.service，在 ExecStart变量增加这个选项 --graph /data/docker, 就可以把默认储存位置改成/data/docker。 然后 systemctl disable docker systemctl enable docker systemctl daemon-reload systemctl restart docker 就可以了 docker info可以看下储存位置，可以看到 Docker Root Dir已经改了">
+<meta property="og:description" content="查看对应的容器日志: docker logs dockerID 重启docker服务: systemctl restart docker 删除容器： docker rm containerID 删除镜像 docker rmi [image] 把镜像保存成压缩包： docker save -o my_ubuntu_v3.tar runoob/ubuntu:v3 导入本地镜像 docker load &lt; xxx.tar 查看容器的具体信息可以用： docker inspect 容器ID 查看docker使用情况 docker stats（持续监控） Docker stats --no-stream(固定输出) Docker stats --no-stream docker_name docker_id （查看具体容器） 更新docker 配置： docker update -m 2g --memory-swap -1 docker_id docker update -m 16g --memery-swap 16g docker_id docker update --cpus=1 查看docker使用cpu,内存情况 命令：docker stats 要静态的显示，并按内存使用多少排列： docker stats --no-stream --format &quot;table \t\t\t&quot; | sort -k 4 -h 查看docker详细配置 docker inspect dockerID | grep IPAddress 重启了宿主机后docker服务没有启动 systemctl start docker启动docker 服务 systemctl enable docker.service 即可设置开机自启动 systemctl list-unit-files 可以查看开机启动的列表 其他的docker容器都可以正常的启动，但是docker-registry-frontend容器启动后却连接不上镜像仓库 查看dockerl logs ，发现显示如下内容 刚开始以为这是登不上的原因，但其实这是这个容器启动的正常显示， Module auth_kerb disabled. To activate the new configuration, you need to run: service apache2 restart 这些并不是错误，只是这个镜像本身把apache2的auth_kerb模块禁用了，如果想启用新的配置就重启apache2服务，其实不用管。 AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.18.0.2. Set the 'ServerName' directive globally to suppress this message 本来以为这句也是错误，但其实也是正常的 因为用 docker inspect dockerID | grep IPAddress ，查看了该docker的IP，确实也是172.18.0.2，说明是对的。 最后当我尝试通过10.154.105.100:5001登陆时，会报错：No route to host，根据这个报错， 通过查看firewall-cmd --state，发现防火墙在开着，猜想可能是防火墙的把访问阻挡住了 用systemctl stop firewalld.service 命令关闭防火墙，问题解决 然后用systemctl disable firewalld.service 命令，阻止防火墙开机启动 另外，centos还有SELINUX服务，也是类似防火墙的服务，需要关闭： getenforce 查看selinux服务是否开启，ENforcing就是开启状态， setenforce 0 可以暂时关闭SELINUX，如果想永久关闭， 需要vi /etc/selinux/config，将SELINUX=enforcing改为SELINUX=disabled，重启后生效 总结： 1.装好linux后要首先关闭防火墙 2.看日志时，主要看报错的error ,其他的warning， fail，disabled，couldn’t find 等提示有可能都是正常的 docker 制作镜像： 1.docker run –net=host –name=test-git -v ~/.ssh:/root/.ssh -v /data2/test/:/data2/test/ -it registry.me/wxhui/xxx-compiler:8025.2 /bin/bash运行起来 2.做修改 3.在宿主机上docker commit dockerID centos:test 修改镜像名称 docker tag imageID xxx/xxxx/xxx-compiler:tag docker commit做的镜像只会保存非映射目录，就是说-v映射的目录不会保存 修改docker默认储存目录 docker的默认储存目录是/var/lib/docker 修改方法如下: 修改docker的systemd的 docker.service的配置文件: systemctl disable docker systemctl enable docker 显示结果 Created symlink from /etc/systemd/system/multi-user.target.wants/docker.service to /usr/lib/systemd/system/docker.service. 修改这个 /usr/lib/systemd/system/docker.service，在 ExecStart变量增加这个选项 --graph /data/docker, 就可以把默认储存位置改成/data/docker。 然后 systemctl disable docker systemctl enable docker systemctl daemon-reload systemctl restart docker 就可以了 docker info可以看下储存位置，可以看到 Docker Root Dir已经改了">
+<link rel="canonical" href="/jekyll-theme-yat/docker/2022/07/15/docker.html">
+<meta property="og:url" content="/jekyll-theme-yat/docker/2022/07/15/docker.html">
+<meta property="og:site_name" content="Lil Bear’s blog">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2022-07-15T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="docker用法">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Lil bear"},"dateModified":"2022-07-15T00:00:00+00:00","datePublished":"2022-07-15T00:00:00+00:00","description":"查看对应的容器日志: docker logs dockerID 重启docker服务: systemctl restart docker 删除容器： docker rm containerID 删除镜像 docker rmi [image] 把镜像保存成压缩包： docker save -o my_ubuntu_v3.tar runoob/ubuntu:v3 导入本地镜像 docker load &lt; xxx.tar 查看容器的具体信息可以用： docker inspect 容器ID 查看docker使用情况 docker stats（持续监控） Docker stats --no-stream(固定输出) Docker stats --no-stream docker_name docker_id （查看具体容器） 更新docker 配置： docker update -m 2g --memory-swap -1 docker_id docker update -m 16g --memery-swap 16g docker_id docker update --cpus=1 查看docker使用cpu,内存情况 命令：docker stats 要静态的显示，并按内存使用多少排列： docker stats --no-stream --format &quot;table \\t\\t\\t&quot; | sort -k 4 -h 查看docker详细配置 docker inspect dockerID | grep IPAddress 重启了宿主机后docker服务没有启动 systemctl start docker启动docker 服务 systemctl enable docker.service 即可设置开机自启动 systemctl list-unit-files 可以查看开机启动的列表 其他的docker容器都可以正常的启动，但是docker-registry-frontend容器启动后却连接不上镜像仓库 查看dockerl logs ，发现显示如下内容 刚开始以为这是登不上的原因，但其实这是这个容器启动的正常显示， Module auth_kerb disabled. To activate the new configuration, you need to run: service apache2 restart 这些并不是错误，只是这个镜像本身把apache2的auth_kerb模块禁用了，如果想启用新的配置就重启apache2服务，其实不用管。 AH00558: apache2: Could not reliably determine the server&#39;s fully qualified domain name, using 172.18.0.2. Set the &#39;ServerName&#39; directive globally to suppress this message 本来以为这句也是错误，但其实也是正常的 因为用 docker inspect dockerID | grep IPAddress ，查看了该docker的IP，确实也是172.18.0.2，说明是对的。 最后当我尝试通过10.154.105.100:5001登陆时，会报错：No route to host，根据这个报错， 通过查看firewall-cmd --state，发现防火墙在开着，猜想可能是防火墙的把访问阻挡住了 用systemctl stop firewalld.service 命令关闭防火墙，问题解决 然后用systemctl disable firewalld.service 命令，阻止防火墙开机启动 另外，centos还有SELINUX服务，也是类似防火墙的服务，需要关闭： getenforce 查看selinux服务是否开启，ENforcing就是开启状态， setenforce 0 可以暂时关闭SELINUX，如果想永久关闭， 需要vi /etc/selinux/config，将SELINUX=enforcing改为SELINUX=disabled，重启后生效 总结： 1.装好linux后要首先关闭防火墙 2.看日志时，主要看报错的error ,其他的warning， fail，disabled，couldn’t find 等提示有可能都是正常的 docker 制作镜像： 1.docker run –net=host –name=test-git -v ~/.ssh:/root/.ssh -v /data2/test/:/data2/test/ -it registry.me/wxhui/xxx-compiler:8025.2 /bin/bash运行起来 2.做修改 3.在宿主机上docker commit dockerID centos:test 修改镜像名称 docker tag imageID xxx/xxxx/xxx-compiler:tag docker commit做的镜像只会保存非映射目录，就是说-v映射的目录不会保存 修改docker默认储存目录 docker的默认储存目录是/var/lib/docker 修改方法如下: 修改docker的systemd的 docker.service的配置文件: systemctl disable docker systemctl enable docker 显示结果 Created symlink from /etc/systemd/system/multi-user.target.wants/docker.service to /usr/lib/systemd/system/docker.service. 修改这个 /usr/lib/systemd/system/docker.service，在 ExecStart变量增加这个选项 --graph /data/docker, 就可以把默认储存位置改成/data/docker。 然后 systemctl disable docker systemctl enable docker systemctl daemon-reload systemctl restart docker 就可以了 docker info可以看下储存位置，可以看到 Docker Root Dir已经改了","headline":"docker用法","mainEntityOfPage":{"@type":"WebPage","@id":"/jekyll-theme-yat/docker/2022/07/15/docker.html"},"url":"/jekyll-theme-yat/docker/2022/07/15/docker.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="shortcut icon" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/jekyll-theme-yat/assets/css/main.css">
+  <script src="/jekyll-theme-yat/assets/js/main.js"></script><link type="application/atom+xml" rel="alternate" href="/jekyll-theme-yat/feed.xml" title="Lil Bear's blog">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/languages/go.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<header class="site-header " role="banner">
+
+  <div class="wrapper">
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/jekyll-theme-yat/">
+  <img class="site-favicon" title="Lil Bear's blog" src="" onerror="this.style.display='none'">
+  Lil Bear's blog
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+<a class="page-link" href="/jekyll-theme-yat/about.html">ABOUT</a><a class="page-link" href="/jekyll-theme-yat/archives.html">ARCHIVES</a><a class="page-link" href="/jekyll-theme-yat/categories.html">CATEGORIES</a><a class="page-link" href="/jekyll-theme-yat/">HOME</a><a class="page-link" href="/jekyll-theme-yat/tags.html">TAGS</a>
+
+
+
+
+
+
+
+
+
+<span class="page-link">
+
+
+
+<div id="google_translate_element" style="display: none;">
+</div>
+
+<span class="ct-language">
+  <ul class="list-unstyled ct-language-dropdown">
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="en">
+          
+          <img src="https://cdn.countryflags.com/thumbs/united-states-of-america/flag-400.png" title="English">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="fr">
+          
+          <img src="https://cdn.countryflags.com/thumbs/france/flag-400.png" title="French">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="zh-CN">
+          
+          <img src="https://cdn.countryflags.com/thumbs/china/flag-400.png" title="Chinese(Simple)">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ja">
+          
+          <img src="https://cdn.countryflags.com/thumbs/japan/flag-400.png" title="Japanese">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ko">
+          
+          <img src="https://cdn.countryflags.com/thumbs/south-korea/flag-400.png" title="Korean">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ru">
+          
+          <img src="https://cdn.countryflags.com/thumbs/russia/flag-400.png" title="Russian">
+          
+        </a>
+      </li>
+    
+  </ul>
+</span>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    autoDisplay: false,
+    layout: google.translate.TranslateElement.InlineLayout.VERTICAL
+  }, 'google_translate_element');
+
+  // Links to cross-origin destinations are unsafe
+  var gll = document.getElementsByClassName('goog-logo-link')[0];
+  if (gll) {
+    gll.setAttribute('rel', 'noopener');
+  }
+
+  function restoreLang() {
+    var iframe = document.getElementsByClassName('goog-te-banner-frame')[0];
+    if (!iframe) return;
+
+    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+    var restore_el = innerDoc.getElementsByTagName("button");
+
+    for (var i = 0; i < restore_el.length; i++) {
+      if (restore_el[i].id.indexOf("restore") >= 0) {
+        restore_el[i].click();
+        var close_el = innerDoc.getElementsByClassName("goog-close-link");
+        close_el[0].click();
+        return;
+      }
+    }
+  }
+
+  function triggerHtmlEvent(element, eventName) {
+    var event;
+    if (document.createEvent) {
+      event = document.createEvent('HTMLEvents');
+      event.initEvent(eventName, true, true);
+      element.dispatchEvent(event);
+    } else {
+      event = document.createEventObject();
+      event.eventType = eventName;
+      element.fireEvent('on' + event.eventType, event);
+    }
+  }
+
+  var googleCombo = document.querySelector("select.goog-te-combo");
+  var langSelect = document.querySelector('.ct-language');
+  langSelect.addEventListener('click', function(event) {
+    if (!event.target) {
+      return;
+    }
+
+    var selected = document.querySelector('.ct-language .ct-language-selected');
+    if (selected) {
+      selected.classList.remove('ct-language-selected');
+    }
+
+    var target = event.target;
+    while (target && target !== langSelect ) {
+      if (target.matches('.lang-select')) {
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    if (target && target.matches('.lang-select')) {
+      var lang = target.getAttribute('data-lang');
+      if (googleCombo.value == lang) {
+        restoreLang();
+      } else {
+        target.parentElement.classList.add('ct-language-selected');
+        googleCombo.value = lang;
+        triggerHtmlEvent(googleCombo, 'change');
+      }
+    }
+
+    event.preventDefault();
+  });
+}
+</script>
+
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</span>
+</div>
+        </nav>
+</div>
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<div id="click-to-top" class="click-to-top">
+  <i class="fa fa-arrow-up"></i>
+</div>
+<script>
+  (function () {
+    const clickToTop = document.getElementById('click-to-top');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        clickToTop.classList.add('show')
+      }else {
+        clickToTop.classList.remove('show')
+      }
+    });
+    clickToTop.addEventListener('click', () => {
+      window.smoothScrollTo(0);
+    });
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+
+
+
+
+
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">docker用法</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2022-07-15T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> Jul 15, 2022
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 2 mins</span>
+  </p>
+<div class="post-tags"><a class="post-tag" href="/jekyll-theme-yat/tags.html#docker">#docker</a></div></header>
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <h3 id="查看对应的容器日志">查看对应的容器日志:</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker logs dockerID</code></p>
+
+<h3 id="重启docker服务">重启docker服务:</h3>
+
+<p><code class="language-plaintext highlighter-rouge">systemctl restart docker</code></p>
+
+<h3 id="删除容器">删除容器：</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker rm containerID</code></p>
+
+<h3 id="删除镜像">删除镜像</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker rmi [image]</code></p>
+
+<h3 id="把镜像保存成压缩包">把镜像保存成压缩包：</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker save -o my_ubuntu_v3.tar runoob/ubuntu:v3</code></p>
+
+<h3 id="导入本地镜像">导入本地镜像</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker load &lt; xxx.tar</code></p>
+
+<h3 id="查看容器的具体信息可以用">查看容器的具体信息可以用：</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker inspect 容器ID</code></p>
+
+<h3 id="查看docker使用情况">查看docker使用情况</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker stats（持续监控）</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">Docker stats --no-stream(固定输出)</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">Docker stats --no-stream docker_name docker_id （查看具体容器）</code></p>
+
+<h3 id="更新docker-配置">更新docker 配置：</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker update -m 2g --memory-swap -1 docker_id</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">docker update -m 16g --memery-swap 16g docker_id</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">docker update --cpus=1</code></p>
+
+<h3 id="查看docker使用cpu内存情况">查看docker使用cpu,内存情况</h3>
+
+<p>命令：<code class="language-plaintext highlighter-rouge">docker stats</code></p>
+
+<h3 id="要静态的显示并按内存使用多少排列">要静态的显示，并按内存使用多少排列：</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker stats --no-stream --format "table \t\t\t" | sort -k 4 -h</code></p>
+
+<h3 id="查看docker详细配置">查看docker详细配置</h3>
+
+<p><code class="language-plaintext highlighter-rouge">docker inspect dockerID | grep IPAddress</code></p>
+
+<h3 id="重启了宿主机后docker服务没有启动">重启了宿主机后docker服务没有启动</h3>
+<p><code class="language-plaintext highlighter-rouge">systemctl start docker</code>启动docker 服务</p>
+
+<p><code class="language-plaintext highlighter-rouge">systemctl enable docker.service</code> 即可设置开机自启动</p>
+
+<p><code class="language-plaintext highlighter-rouge">systemctl list-unit-files</code> 可以查看开机启动的列表</p>
+
+<p>其他的docker容器都可以正常的启动，但是docker-registry-frontend容器启动后却连接不上镜像仓库</p>
+
+<p>查看dockerl logs ，发现显示如下内容</p>
+
+<p>刚开始以为这是登不上的原因，但其实这是这个容器启动的正常显示，</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Module auth_kerb disabled.
+To activate the new configuration, you need to run:
+  service apache2 restart
+</code></pre></div></div>
+
+<p>这些并不是错误，只是这个镜像本身把apache2的auth_kerb模块禁用了，如果想启用新的配置就重启apache2服务，其实不用管。</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.18.0.2. Set the 'ServerName' directive globally to suppress this message
+</code></pre></div></div>
+
+<p>本来以为这句也是错误，但其实也是正常的</p>
+
+<p>因为用 <code class="language-plaintext highlighter-rouge">docker inspect dockerID | grep IPAddress</code> ，查看了该docker的IP，确实也是172.18.0.2，说明是对的。</p>
+
+<p>最后当我尝试通过10.154.105.100:5001登陆时，会报错：No route to host，根据这个报错，
+通过查看<code class="language-plaintext highlighter-rouge">firewall-cmd --state</code>，发现防火墙在开着，猜想可能是防火墙的把访问阻挡住了</p>
+
+<p>用<code class="language-plaintext highlighter-rouge">systemctl stop firewalld.service</code> 命令关闭防火墙，问题解决</p>
+
+<p>然后用<code class="language-plaintext highlighter-rouge">systemctl disable firewalld.service</code> 命令，阻止防火墙开机启动</p>
+
+<p>另外，centos还有SELINUX服务，也是类似防火墙的服务，需要关闭：</p>
+
+<p>getenforce  查看selinux服务是否开启，ENforcing就是开启状态，</p>
+
+<p>setenforce 0 可以暂时关闭SELINUX，如果想永久关闭，</p>
+
+<p>需要<code class="language-plaintext highlighter-rouge">vi /etc/selinux/config</code>，将SELINUX=enforcing改为SELINUX=disabled，重启后生效</p>
+
+<p>总结：</p>
+
+<p>1.装好linux后要首先关闭防火墙</p>
+
+<p>2.看日志时，主要看报错的error ,其他的warning， fail，disabled，couldn’t find 等提示有可能都是正常的</p>
+
+<h3 id="docker-制作镜像">docker 制作镜像：</h3>
+
+<p>1.docker run –net=host –name=test-git -v ~/.ssh:/root/.ssh -v /data2/test/:/data2/test/ -it registry.me/wxhui/xxx-compiler:8025.2 /bin/bash运行起来</p>
+
+<p>2.做修改</p>
+
+<p>3.在宿主机上docker commit dockerID centos:test</p>
+
+<p><strong>修改镜像名称</strong></p>
+
+<p>docker tag imageID xxx/xxxx/xxx-compiler:tag</p>
+
+<p>docker commit做的镜像只会保存非映射目录，就是说-v映射的目录不会保存</p>
+
+<h3 id="修改docker默认储存目录">修改docker默认储存目录</h3>
+
+<p>docker的默认储存目录是/var/lib/docker</p>
+
+<p>修改方法如下:</p>
+
+<p>修改docker的systemd的 docker.service的配置文件:</p>
+
+<p>systemctl disable docker</p>
+
+<p>systemctl enable docker</p>
+
+<p>显示结果</p>
+
+<p>Created symlink from /etc/systemd/system/multi-user.target.wants/docker.service to /usr/lib/systemd/system/docker.service.</p>
+
+<p>修改这个 /usr/lib/systemd/system/docker.service，在 ExecStart变量增加这个选项 <code class="language-plaintext highlighter-rouge">--graph /data/docker</code>,</p>
+
+<p>就可以把默认储存位置改成/data/docker。</p>
+
+<p>然后</p>
+
+<p>systemctl disable docker</p>
+
+<p>systemctl enable docker</p>
+
+<p>systemctl daemon-reload</p>
+
+<p>systemctl restart docker</p>
+
+<p>就可以了</p>
+
+<p>docker info可以看下储存位置，可以看到 Docker Root Dir已经改了</p>
+
+
+    </div>
+
+</article>
+<div class="post-nav">
+<a class="previous" href="/jekyll-theme-yat/php/2022/07/14/php.html" title="PHP知识">PHP知识</a><a class="next" href="/jekyll-theme-yat/%E8%A7%A3%E8%80%A6/2022/07/15/jieou.html" title="关于解耦的思考">关于解耦的思考</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/jekyll-theme-yat/example/2017/12/04/plantuml-example.html" title="关于解耦的思考">Plantuml example</a></li>
+<li><a class="post-link" href="/jekyll-theme-yat/jekyll/2022/07/11/%E8%AE%B0%E5%BD%95jekyll+github-pages%E6%90%AD%E5%BB%BA%E5%8D%9A%E5%AE%A2%E8%BF%87%E7%A8%8B.html" title="关于解耦的思考">jekyll+github pages搭建博客的过程</a></li>
+<li><a class="post-link" href="/jekyll-theme-yat/%E7%BC%96%E8%AF%91/2022/07/13/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86.html" title="关于解耦的思考">编译相关知识</a></li>
+<li><a class="post-link" href="/jekyll-theme-yat/markdown/2018/05/26/mathjax-test.html" title="关于解耦的思考">Mathjax Test</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --><style type="text/css" media="screen">
+.post-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+</style>
+
+<div class="post-menu">
+  <div class="post-menu-title">TOC</div>
+  <div class="post-menu-content"></div>
+</div>
+
+<script>
+  function generateContent() {
+    var menu = document.querySelector(".post-menu");
+    var menuContent =  menu.querySelector(".post-menu-content");
+    var headings = document.querySelector(".post-content").querySelectorAll("h2, h3, h4, h5, h6");
+
+    // Hide menu when no headings
+    if (headings.length === 0) {
+      return menu.style.display = "none";
+    }
+
+    // Generate post menu
+    var menuHTML = '';
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      menuHTML += (
+        '<li class="h-' + h.tagName.toLowerCase() + '">'
+        + '<a href="#h-' + h.getAttribute('id') + '">' + h.textContent + '</a></li>');
+    }
+
+    menuContent.innerHTML = '<ul>' + menuHTML + '</ul>';
+
+    // The header element
+    var header = document.querySelector('header.site-header');
+
+    function doMenuCollapse(index, over_items) {
+      var items = menuContent.firstChild.children;
+
+      if (over_items == undefined) {
+        over_items = 20;
+      }
+
+      if (items.length < over_items) {
+        return;
+      }
+
+      var activeItem = items[index];
+      var beginItem = activeItem
+      var endItem = activeItem
+      var beginIndex = index;
+      var endIndex = index + 1;
+      while (beginIndex >= 0
+        && !items[beginIndex].classList.contains('h-h2')) {
+        beginIndex -= 1;
+      }
+      while (endIndex < items.length
+        && !items[endIndex].classList.contains('h-h2')) {
+        endIndex += 1;
+      }
+      for (var i = 0; i < beginIndex; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+      for (var i = beginIndex + 1; i < endIndex; i++) {
+        item = items[i]
+        // if (!item.classList.contains('h-h2')) {
+          item.style.display = '';
+        // }
+      }
+      for (var i = endIndex; i < items.length; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+    }
+
+    // Init menu collapsed
+    doMenuCollapse(-1);
+
+    // Active the menu item
+    window.addEventListener('scroll', function (event) {
+      var lastActive = menuContent.querySelector('.active');
+      var changed = true;
+      var activeIndex = -1;
+      for (var i = headings.length - 1; i >= 0; i--) {
+        var h = headings[i];
+        var headingRect = h.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var headerTop = Math.floor(headerRect.top);
+        var headerHeight = Math.floor(headerRect.height);
+        var headerHeight = headerTop + headerHeight + 20;
+        if (headingRect.top <= headerHeight) {
+          var id = 'h-' + h.getAttribute('id');
+          var a = menuContent.querySelector('a[href="#' + id  + '"]');
+          var curActive = a.parentNode;
+          if (curActive) {
+            curActive.classList.add('active');
+            activeIndex = i;
+          }
+          if (lastActive == curActive) {
+            changed = false;
+          }
+          break;
+        }
+      }
+      if (changed) {
+        if (lastActive) {
+          lastActive.classList.remove('active');
+        }
+        doMenuCollapse(activeIndex);
+      }
+      event.preventDefault();
+    });
+  }
+  generateContent();
+</script>
+</section>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/jekyll-theme-yat/"></data>
+
+  <div class="wrapper">
+    <div class="site-footer-inner">
+<div>Unpublished Work <span class="copyleft">©</span> 2017-2022 Lil bear</div>
+      <div>Powered by <a title="Jekyll is a simple, blog-aware, static site
+      generator." href="https://jekyllrb.com/">Jekyll</a> &amp; <a title="Yat, yet
+      another theme." href="https://github.com/jeffreytse/jekyll-theme-yat">Yat Theme</a>.</div>
+      <div class="footer-col rss-subscribe">Subscribe <a href="/jekyll-theme-yat/feed.xml">via RSS</a>
+</div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>编译相关知识 | Lil Bear’s blog</title>
+<meta name="generator" content="Jekyll v4.2.2">
+<meta property="og:title" content="编译相关知识">
+<meta name="author" content="Lil bear">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="如果编译时遇到 undefine reference to symbol xxx，表示找不到这个符号，编译时-l链接上这个库就行了 ldd +编译出来的文件，就可以看该文件链接的动态库 静态目标文件.o文件，编译时就把内容加到可执行文件里 第二次编译时，如果makefile里写的依赖的文件变的话，会重新编译，否则不会重新编译。通常是不会把.h文件写到makefile的依赖里的，如果改完之后直接make可能不会重新编，所以最好的办法是make clean再make Makefile 相关知识 参考makefile详解 makefile中，冒号前的默认为文件，冒号后为这个文件的依赖，下一行为更新这个文件需要执行的命令 如果我们只是想执行某些操作，比如clean时删除编译出来的文件，可以把这个clean前加上.PHONY : clean，表示它是个伪文件 如果不加这个命令，那么如果当前路径下存在一个叫clean的文件，我们再执行make clean就会报错 常用函数： 格式：$(patsubst &lt;pattern&gt;,&lt;replacement&gt;,&lt;text&gt; ) 名称：模式字符串替换函数——patsubst。 功能：查找&lt;text&gt;中的单词（单词以“空格”、“Tab”或“回车”“换行”分隔）是否符合模式&lt;pattern&gt;，如果匹配的话，则以&lt;replacement&gt;替换。 这里，&lt;pattern&gt;可以包括通配符“%”，表示任意长度的字串。如果&lt;replacement&gt;中也包含“%”，那么，&lt;replacement&gt;中的这个“%”将是&lt;pattern&gt;中的那个“%”所代表的字串。 （可以用“\”来转义，以“%”来表示真实含义的“%”字符） 返回：函数返回被替换过后的字符串。 示例： $(patsubst %.c,%.o, a.c b.c) 把字串“a.c b.c”符合模式[%.c]的单词替换成[%.o]，返回结果是“a.o b.o” so嵌套引用的情况： 3.so用到了2.so中的函数，2.so用到了1.so中的函数 2.so引用了1.h，但是编译时未链接1.so。这样就可以编译过的，但是2.so的符号表不完整。 3.so想用2.so中的函数时，直接包含2.h，但是不链接2.so，也是可以编译过的，这时3.so的符号表也不完整。任何想链接3.so的可执行程序编译时一链接3.so就会报错，说缺少2.so和1.so中的符号。 必须在编译时同时链接上1.so和2.so，即把不完整的符号表补齐才行。 补齐符号表，也可以链接静态库，如下所示 b.so 用到了c.c中的函数，但是只引用了c.h,在链接时并未链接c.a，此时b.so中的符号表是不完整的，用到的c.h中的函数只能看到一个声明，看不到具体的实现。如果是一个可执行程序链接b.so时，必须把c.c包含进去，不论是直接链接c.c对应的c.o，或者是链接打包成的c.a(可能有其他的.o被打包进来，如果只用到c.c中的文件的话，建议直接用c.o)。 此处画的a.so则不用补齐符号表。 总结：如果一个so的符号表不完整，可以编译过，但是该so不能再被其他可执行程序链接（但是可以被其他的so链接，只要最终用到这个so的可执行程序把符号表补齐就可以了），必须把不完整的符号表补充完整，即把缺少的符号的源文件包含进来。包含进来的方式可以直接链接目标文件.o，或链接库文件.a，.so。 makefile的MAKEFILE_LIST变量，是个列表变量, 在每次make读入一个makefile文件时, 都把它添加到最后一项， 可以通过 makefile_name := $(lastword $(MAKEFILE_LIST)) makefile_path := $(abspath $(makefile_name)) 来获取当前的makefile的绝对路径 一个a.c或想引用另外一个b.c中定义的函数，有两种方式： 1.b.c在头文件b.h中声明一下这个函数，a.c只要include这个b.h就可以用到这个函数。 2.a.c直接extern声明b.c中的函数，就可以用了。 当然，这两种方式都必须能找到函数的定义，所以要不就编译时一起编进来例如，gcc a.c b.c -o ,或编译时a.c在编译时引用静态库b.a；要么就引用动态库。 总的来说这两种方式是一种，就是说我想用别的文件定义的函数之前，一定要声明一下这个函数（在能找到定义的情况下），不论是通过include头文件中的声明，或者是直接extern来声明。">
+<meta property="og:description" content="如果编译时遇到 undefine reference to symbol xxx，表示找不到这个符号，编译时-l链接上这个库就行了 ldd +编译出来的文件，就可以看该文件链接的动态库 静态目标文件.o文件，编译时就把内容加到可执行文件里 第二次编译时，如果makefile里写的依赖的文件变的话，会重新编译，否则不会重新编译。通常是不会把.h文件写到makefile的依赖里的，如果改完之后直接make可能不会重新编，所以最好的办法是make clean再make Makefile 相关知识 参考makefile详解 makefile中，冒号前的默认为文件，冒号后为这个文件的依赖，下一行为更新这个文件需要执行的命令 如果我们只是想执行某些操作，比如clean时删除编译出来的文件，可以把这个clean前加上.PHONY : clean，表示它是个伪文件 如果不加这个命令，那么如果当前路径下存在一个叫clean的文件，我们再执行make clean就会报错 常用函数： 格式：$(patsubst &lt;pattern&gt;,&lt;replacement&gt;,&lt;text&gt; ) 名称：模式字符串替换函数——patsubst。 功能：查找&lt;text&gt;中的单词（单词以“空格”、“Tab”或“回车”“换行”分隔）是否符合模式&lt;pattern&gt;，如果匹配的话，则以&lt;replacement&gt;替换。 这里，&lt;pattern&gt;可以包括通配符“%”，表示任意长度的字串。如果&lt;replacement&gt;中也包含“%”，那么，&lt;replacement&gt;中的这个“%”将是&lt;pattern&gt;中的那个“%”所代表的字串。 （可以用“\”来转义，以“%”来表示真实含义的“%”字符） 返回：函数返回被替换过后的字符串。 示例： $(patsubst %.c,%.o, a.c b.c) 把字串“a.c b.c”符合模式[%.c]的单词替换成[%.o]，返回结果是“a.o b.o” so嵌套引用的情况： 3.so用到了2.so中的函数，2.so用到了1.so中的函数 2.so引用了1.h，但是编译时未链接1.so。这样就可以编译过的，但是2.so的符号表不完整。 3.so想用2.so中的函数时，直接包含2.h，但是不链接2.so，也是可以编译过的，这时3.so的符号表也不完整。任何想链接3.so的可执行程序编译时一链接3.so就会报错，说缺少2.so和1.so中的符号。 必须在编译时同时链接上1.so和2.so，即把不完整的符号表补齐才行。 补齐符号表，也可以链接静态库，如下所示 b.so 用到了c.c中的函数，但是只引用了c.h,在链接时并未链接c.a，此时b.so中的符号表是不完整的，用到的c.h中的函数只能看到一个声明，看不到具体的实现。如果是一个可执行程序链接b.so时，必须把c.c包含进去，不论是直接链接c.c对应的c.o，或者是链接打包成的c.a(可能有其他的.o被打包进来，如果只用到c.c中的文件的话，建议直接用c.o)。 此处画的a.so则不用补齐符号表。 总结：如果一个so的符号表不完整，可以编译过，但是该so不能再被其他可执行程序链接（但是可以被其他的so链接，只要最终用到这个so的可执行程序把符号表补齐就可以了），必须把不完整的符号表补充完整，即把缺少的符号的源文件包含进来。包含进来的方式可以直接链接目标文件.o，或链接库文件.a，.so。 makefile的MAKEFILE_LIST变量，是个列表变量, 在每次make读入一个makefile文件时, 都把它添加到最后一项， 可以通过 makefile_name := $(lastword $(MAKEFILE_LIST)) makefile_path := $(abspath $(makefile_name)) 来获取当前的makefile的绝对路径 一个a.c或想引用另外一个b.c中定义的函数，有两种方式： 1.b.c在头文件b.h中声明一下这个函数，a.c只要include这个b.h就可以用到这个函数。 2.a.c直接extern声明b.c中的函数，就可以用了。 当然，这两种方式都必须能找到函数的定义，所以要不就编译时一起编进来例如，gcc a.c b.c -o ,或编译时a.c在编译时引用静态库b.a；要么就引用动态库。 总的来说这两种方式是一种，就是说我想用别的文件定义的函数之前，一定要声明一下这个函数（在能找到定义的情况下），不论是通过include头文件中的声明，或者是直接extern来声明。">
+<link rel="canonical" href="/jekyll-theme-yat/%E7%BC%96%E8%AF%91/2022/07/13/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86.html">
+<meta property="og:url" content="/jekyll-theme-yat/%E7%BC%96%E8%AF%91/2022/07/13/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86.html">
+<meta property="og:site_name" content="Lil Bear’s blog">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2022-07-13T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="编译相关知识">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Lil bear"},"dateModified":"2022-07-13T00:00:00+00:00","datePublished":"2022-07-13T00:00:00+00:00","description":"如果编译时遇到 undefine reference to symbol xxx，表示找不到这个符号，编译时-l链接上这个库就行了 ldd +编译出来的文件，就可以看该文件链接的动态库 静态目标文件.o文件，编译时就把内容加到可执行文件里 第二次编译时，如果makefile里写的依赖的文件变的话，会重新编译，否则不会重新编译。通常是不会把.h文件写到makefile的依赖里的，如果改完之后直接make可能不会重新编，所以最好的办法是make clean再make Makefile 相关知识 参考makefile详解 makefile中，冒号前的默认为文件，冒号后为这个文件的依赖，下一行为更新这个文件需要执行的命令 如果我们只是想执行某些操作，比如clean时删除编译出来的文件，可以把这个clean前加上.PHONY : clean，表示它是个伪文件 如果不加这个命令，那么如果当前路径下存在一个叫clean的文件，我们再执行make clean就会报错 常用函数： 格式：$(patsubst &lt;pattern&gt;,&lt;replacement&gt;,&lt;text&gt; ) 名称：模式字符串替换函数——patsubst。 功能：查找&lt;text&gt;中的单词（单词以“空格”、“Tab”或“回车”“换行”分隔）是否符合模式&lt;pattern&gt;，如果匹配的话，则以&lt;replacement&gt;替换。 这里，&lt;pattern&gt;可以包括通配符“%”，表示任意长度的字串。如果&lt;replacement&gt;中也包含“%”，那么，&lt;replacement&gt;中的这个“%”将是&lt;pattern&gt;中的那个“%”所代表的字串。 （可以用“\\”来转义，以“%”来表示真实含义的“%”字符） 返回：函数返回被替换过后的字符串。 示例： $(patsubst %.c,%.o, a.c b.c) 把字串“a.c b.c”符合模式[%.c]的单词替换成[%.o]，返回结果是“a.o b.o” so嵌套引用的情况： 3.so用到了2.so中的函数，2.so用到了1.so中的函数 2.so引用了1.h，但是编译时未链接1.so。这样就可以编译过的，但是2.so的符号表不完整。 3.so想用2.so中的函数时，直接包含2.h，但是不链接2.so，也是可以编译过的，这时3.so的符号表也不完整。任何想链接3.so的可执行程序编译时一链接3.so就会报错，说缺少2.so和1.so中的符号。 必须在编译时同时链接上1.so和2.so，即把不完整的符号表补齐才行。 补齐符号表，也可以链接静态库，如下所示 b.so 用到了c.c中的函数，但是只引用了c.h,在链接时并未链接c.a，此时b.so中的符号表是不完整的，用到的c.h中的函数只能看到一个声明，看不到具体的实现。如果是一个可执行程序链接b.so时，必须把c.c包含进去，不论是直接链接c.c对应的c.o，或者是链接打包成的c.a(可能有其他的.o被打包进来，如果只用到c.c中的文件的话，建议直接用c.o)。 此处画的a.so则不用补齐符号表。 总结：如果一个so的符号表不完整，可以编译过，但是该so不能再被其他可执行程序链接（但是可以被其他的so链接，只要最终用到这个so的可执行程序把符号表补齐就可以了），必须把不完整的符号表补充完整，即把缺少的符号的源文件包含进来。包含进来的方式可以直接链接目标文件.o，或链接库文件.a，.so。 makefile的MAKEFILE_LIST变量，是个列表变量, 在每次make读入一个makefile文件时, 都把它添加到最后一项， 可以通过 makefile_name := $(lastword $(MAKEFILE_LIST)) makefile_path := $(abspath $(makefile_name)) 来获取当前的makefile的绝对路径 一个a.c或想引用另外一个b.c中定义的函数，有两种方式： 1.b.c在头文件b.h中声明一下这个函数，a.c只要include这个b.h就可以用到这个函数。 2.a.c直接extern声明b.c中的函数，就可以用了。 当然，这两种方式都必须能找到函数的定义，所以要不就编译时一起编进来例如，gcc a.c b.c -o ,或编译时a.c在编译时引用静态库b.a；要么就引用动态库。 总的来说这两种方式是一种，就是说我想用别的文件定义的函数之前，一定要声明一下这个函数（在能找到定义的情况下），不论是通过include头文件中的声明，或者是直接extern来声明。","headline":"编译相关知识","mainEntityOfPage":{"@type":"WebPage","@id":"/jekyll-theme-yat/%E7%BC%96%E8%AF%91/2022/07/13/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86.html"},"url":"/jekyll-theme-yat/%E7%BC%96%E8%AF%91/2022/07/13/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="shortcut icon" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/jekyll-theme-yat/assets/css/main.css">
+  <script src="/jekyll-theme-yat/assets/js/main.js"></script><link type="application/atom+xml" rel="alternate" href="/jekyll-theme-yat/feed.xml" title="Lil Bear's blog">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/languages/go.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<header class="site-header " role="banner">
+
+  <div class="wrapper">
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/jekyll-theme-yat/">
+  <img class="site-favicon" title="Lil Bear's blog" src="" onerror="this.style.display='none'">
+  Lil Bear's blog
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+<a class="page-link" href="/jekyll-theme-yat/about.html">ABOUT</a><a class="page-link" href="/jekyll-theme-yat/archives.html">ARCHIVES</a><a class="page-link" href="/jekyll-theme-yat/categories.html">CATEGORIES</a><a class="page-link" href="/jekyll-theme-yat/">HOME</a><a class="page-link" href="/jekyll-theme-yat/tags.html">TAGS</a>
+
+
+
+
+
+
+
+
+
+<span class="page-link">
+
+
+
+<div id="google_translate_element" style="display: none;">
+</div>
+
+<span class="ct-language">
+  <ul class="list-unstyled ct-language-dropdown">
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="en">
+          
+          <img src="https://cdn.countryflags.com/thumbs/united-states-of-america/flag-400.png" title="English">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="fr">
+          
+          <img src="https://cdn.countryflags.com/thumbs/france/flag-400.png" title="French">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="zh-CN">
+          
+          <img src="https://cdn.countryflags.com/thumbs/china/flag-400.png" title="Chinese(Simple)">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ja">
+          
+          <img src="https://cdn.countryflags.com/thumbs/japan/flag-400.png" title="Japanese">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ko">
+          
+          <img src="https://cdn.countryflags.com/thumbs/south-korea/flag-400.png" title="Korean">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ru">
+          
+          <img src="https://cdn.countryflags.com/thumbs/russia/flag-400.png" title="Russian">
+          
+        </a>
+      </li>
+    
+  </ul>
+</span>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    autoDisplay: false,
+    layout: google.translate.TranslateElement.InlineLayout.VERTICAL
+  }, 'google_translate_element');
+
+  // Links to cross-origin destinations are unsafe
+  var gll = document.getElementsByClassName('goog-logo-link')[0];
+  if (gll) {
+    gll.setAttribute('rel', 'noopener');
+  }
+
+  function restoreLang() {
+    var iframe = document.getElementsByClassName('goog-te-banner-frame')[0];
+    if (!iframe) return;
+
+    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+    var restore_el = innerDoc.getElementsByTagName("button");
+
+    for (var i = 0; i < restore_el.length; i++) {
+      if (restore_el[i].id.indexOf("restore") >= 0) {
+        restore_el[i].click();
+        var close_el = innerDoc.getElementsByClassName("goog-close-link");
+        close_el[0].click();
+        return;
+      }
+    }
+  }
+
+  function triggerHtmlEvent(element, eventName) {
+    var event;
+    if (document.createEvent) {
+      event = document.createEvent('HTMLEvents');
+      event.initEvent(eventName, true, true);
+      element.dispatchEvent(event);
+    } else {
+      event = document.createEventObject();
+      event.eventType = eventName;
+      element.fireEvent('on' + event.eventType, event);
+    }
+  }
+
+  var googleCombo = document.querySelector("select.goog-te-combo");
+  var langSelect = document.querySelector('.ct-language');
+  langSelect.addEventListener('click', function(event) {
+    if (!event.target) {
+      return;
+    }
+
+    var selected = document.querySelector('.ct-language .ct-language-selected');
+    if (selected) {
+      selected.classList.remove('ct-language-selected');
+    }
+
+    var target = event.target;
+    while (target && target !== langSelect ) {
+      if (target.matches('.lang-select')) {
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    if (target && target.matches('.lang-select')) {
+      var lang = target.getAttribute('data-lang');
+      if (googleCombo.value == lang) {
+        restoreLang();
+      } else {
+        target.parentElement.classList.add('ct-language-selected');
+        googleCombo.value = lang;
+        triggerHtmlEvent(googleCombo, 'change');
+      }
+    }
+
+    event.preventDefault();
+  });
+}
+</script>
+
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</span>
+</div>
+        </nav>
+</div>
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<div id="click-to-top" class="click-to-top">
+  <i class="fa fa-arrow-up"></i>
+</div>
+<script>
+  (function () {
+    const clickToTop = document.getElementById('click-to-top');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        clickToTop.classList.add('show')
+      }else {
+        clickToTop.classList.remove('show')
+      }
+    });
+    clickToTop.addEventListener('click', () => {
+      window.smoothScrollTo(0);
+    });
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+
+
+
+
+
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">编译相关知识</h1>
+  <h2 class="post-subtitle"></h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2022-07-13T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> Jul 13, 2022
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 1 min</span>
+  </p>
+<div class="post-tags">
+<a class="post-tag" href="/jekyll-theme-yat/tags.html#%E7%BC%96%E8%AF%91">#编译</a><a class="post-tag" href="/jekyll-theme-yat/tags.html#makefile">#makefile</a>
+</div></header>
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p>如果编译时遇到 undefine reference to symbol xxx，表示找不到这个符号，编译时-l链接上这个库就行了</p>
+
+<p>ldd +编译出来的文件，就可以看该文件链接的动态库</p>
+
+<p>静态目标文件.o文件，编译时就把内容加到可执行文件里</p>
+
+<p>第二次编译时，如果makefile里写的依赖的文件变的话，会重新编译，否则不会重新编译。通常是不会把.h文件写到makefile的依赖里的，如果改完之后直接make可能不会重新编，所以最好的办法是make clean再make</p>
+
+<h2 id="makefile-相关知识">Makefile 相关知识</h2>
+
+<p>参考<a href="https://blog.csdn.net/weixin_38391755/article/details/80380786">makefile详解</a></p>
+
+<p>makefile中，冒号前的默认为文件，冒号后为这个文件的依赖，下一行为更新这个文件需要执行的命令
+如果我们只是想执行某些操作，比如clean时删除编译出来的文件，可以把这个clean前加上.PHONY : clean，表示它是个伪文件</p>
+
+<p><img src="/assets/images/4.PNG" alt=""></p>
+
+<p>如果不加这个命令，那么如果当前路径下存在一个叫clean的文件，我们再执行make clean就会报错</p>
+
+<p>常用函数：
+格式：$(patsubst &lt;pattern&gt;,&lt;replacement&gt;,&lt;text&gt; )
+名称：模式字符串替换函数——patsubst。
+功能：查找&lt;text&gt;中的单词（单词以“空格”、“Tab”或“回车”“换行”分隔）是否符合模式&lt;pattern&gt;，如果匹配的话，则以&lt;replacement&gt;替换。</p>
+
+<p>这里，&lt;pattern&gt;可以包括通配符“%”，表示任意长度的字串。如果&lt;replacement&gt;中也包含“%”，那么，&lt;replacement&gt;中的这个“%”将是&lt;pattern&gt;中的那个“%”所代表的字串。</p>
+
+<p>（可以用“\”来转义，以“%”来表示真实含义的“%”字符）
+返回：函数返回被替换过后的字符串。</p>
+
+<p>示例：</p>
+
+<p><code class="language-plaintext highlighter-rouge">$(patsubst %.c,%.o, a.c b.c)</code></p>
+
+<p>把字串“a.c b.c”符合模式[%.c]的单词替换成[%.o]，返回结果是“a.o b.o”</p>
+
+<h2 id="so嵌套引用的情况">so嵌套引用的情况：</h2>
+
+<p><img src="/assets/images/5.PNG" alt=""></p>
+
+<p>3.so用到了2.so中的函数，2.so用到了1.so中的函数</p>
+
+<p>2.so引用了1.h，但是编译时未链接1.so。这样就可以编译过的，但是2.so的符号表不完整。
+3.so想用2.so中的函数时，直接包含2.h，但是不链接2.so，也是可以编译过的，这时3.so的符号表也不完整。任何想链接3.so的<strong>可执行程序</strong>编译时一链接3.so就会报错，说缺少2.so和1.so中的符号。</p>
+
+<p>必须在编译时同时链接上1.so和2.so，即把不完整的符号表补齐才行。</p>
+
+<p>补齐符号表，也可以链接静态库，如下所示</p>
+
+<p><img src="/assets/images/6.PNG" alt=""></p>
+
+<p>b.so 用到了c.c中的函数，但是只引用了c.h,在链接时并未链接c.a，此时b.so中的符号表是不完整的，用到的c.h中的函数只能看到一个声明，看不到具体的实现。如果是一个<strong>可执行程序</strong>链接b.so时，必须把c.c包含进去，不论是直接链接c.c对应的c.o，或者是链接打包成的c.a(可能有其他的.o被打包进来，如果只用到c.c中的文件的话，建议直接用c.o)。 此处画的a.so则不用补齐符号表。</p>
+
+<p>总结：如果一个so的符号表不完整，可以编译过，但是该so不能再被其他<strong>可执行程序</strong>链接（但是可以被其他的so链接，只要最终用到这个so的<strong>可执行程序</strong>把符号表补齐就可以了），必须把不完整的符号表补充完整，即把缺少的符号的源文件包含进来。包含进来的方式可以直接链接目标文件.o，或链接库文件.a，.so。</p>
+
+<p>makefile的<strong>MAKEFILE_LIST</strong>变量，是个列表变量, 在每次make读入一个makefile文件时, 都把它添加到最后一项，
+可以通过</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>makefile_name := $(lastword $(MAKEFILE_LIST))
+makefile_path := $(abspath $(makefile_name))
+</code></pre></div></div>
+
+<p>来获取当前的makefile的绝对路径</p>
+
+<p>一个a.c或想<strong>引用另外一个b.c中定义的函数</strong>，有两种方式：</p>
+
+<p>1.b.c在头文件b.h中声明一下这个函数，a.c只要include这个b.h就可以用到这个函数。</p>
+
+<p>2.a.c直接extern声明b.c中的函数，就可以用了。</p>
+
+<p>当然，这两种方式都必须能找到函数的定义，所以要不就编译时一起编进来例如，<code class="language-plaintext highlighter-rouge">gcc a.c b.c -o</code></p>
+
+<p>,或编译时a.c在编译时引用静态库b.a；要么就引用动态库。</p>
+
+<p>总的来说这两种方式是一种，就是说我想用别的文件定义的函数之前，一定要声明一下这个函数（在能找到定义的情况下），不论是通过include头文件中的声明，或者是直接extern来声明。</p>
+
+
+    </div>
+
+</article>
+<div class="post-nav">
+<a class="previous" href="/jekyll-theme-yat/git/2022/07/13/git%E7%94%A8%E6%B3%95.html" title="git用法">git用法</a><a class="next" href="/jekyll-theme-yat/linux/2022/07/14/linux.html" title="linux知识">linux知识</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/jekyll-theme-yat/docker/2022/07/15/docker.html" title="linux知识">docker用法</a></li>
+<li><a class="post-link" href="/jekyll-theme-yat/misc/2016/05/19/super-short-article.html" title="linux知识">Some articles are just so short that we have to make the...</a></li>
+<li><a class="post-link" href="/jekyll-theme-yat/linux/2022/07/14/linux.html" title="linux知识">linux知识</a></li>
+<li><a class="post-link" href="/jekyll-theme-yat/markdown/2015/02/28/test-markdown.html" title="linux知识">Test markdown</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --><style type="text/css" media="screen">
+.post-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+</style>
+
+<div class="post-menu">
+  <div class="post-menu-title">TOC</div>
+  <div class="post-menu-content"></div>
+</div>
+
+<script>
+  function generateContent() {
+    var menu = document.querySelector(".post-menu");
+    var menuContent =  menu.querySelector(".post-menu-content");
+    var headings = document.querySelector(".post-content").querySelectorAll("h2, h3, h4, h5, h6");
+
+    // Hide menu when no headings
+    if (headings.length === 0) {
+      return menu.style.display = "none";
+    }
+
+    // Generate post menu
+    var menuHTML = '';
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      menuHTML += (
+        '<li class="h-' + h.tagName.toLowerCase() + '">'
+        + '<a href="#h-' + h.getAttribute('id') + '">' + h.textContent + '</a></li>');
+    }
+
+    menuContent.innerHTML = '<ul>' + menuHTML + '</ul>';
+
+    // The header element
+    var header = document.querySelector('header.site-header');
+
+    function doMenuCollapse(index, over_items) {
+      var items = menuContent.firstChild.children;
+
+      if (over_items == undefined) {
+        over_items = 20;
+      }
+
+      if (items.length < over_items) {
+        return;
+      }
+
+      var activeItem = items[index];
+      var beginItem = activeItem
+      var endItem = activeItem
+      var beginIndex = index;
+      var endIndex = index + 1;
+      while (beginIndex >= 0
+        && !items[beginIndex].classList.contains('h-h2')) {
+        beginIndex -= 1;
+      }
+      while (endIndex < items.length
+        && !items[endIndex].classList.contains('h-h2')) {
+        endIndex += 1;
+      }
+      for (var i = 0; i < beginIndex; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+      for (var i = beginIndex + 1; i < endIndex; i++) {
+        item = items[i]
+        // if (!item.classList.contains('h-h2')) {
+          item.style.display = '';
+        // }
+      }
+      for (var i = endIndex; i < items.length; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+    }
+
+    // Init menu collapsed
+    doMenuCollapse(-1);
+
+    // Active the menu item
+    window.addEventListener('scroll', function (event) {
+      var lastActive = menuContent.querySelector('.active');
+      var changed = true;
+      var activeIndex = -1;
+      for (var i = headings.length - 1; i >= 0; i--) {
+        var h = headings[i];
+        var headingRect = h.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var headerTop = Math.floor(headerRect.top);
+        var headerHeight = Math.floor(headerRect.height);
+        var headerHeight = headerTop + headerHeight + 20;
+        if (headingRect.top <= headerHeight) {
+          var id = 'h-' + h.getAttribute('id');
+          var a = menuContent.querySelector('a[href="#' + id  + '"]');
+          var curActive = a.parentNode;
+          if (curActive) {
+            curActive.classList.add('active');
+            activeIndex = i;
+          }
+          if (lastActive == curActive) {
+            changed = false;
+          }
+          break;
+        }
+      }
+      if (changed) {
+        if (lastActive) {
+          lastActive.classList.remove('active');
+        }
+        doMenuCollapse(activeIndex);
+      }
+      event.preventDefault();
+    });
+  }
+  generateContent();
+</script>
+</section>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/jekyll-theme-yat/"></data>
+
+  <div class="wrapper">
+    <div class="site-footer-inner">
+<div>Unpublished Work <span class="copyleft">©</span> 2017-2022 Lil bear</div>
+      <div>Powered by <a title="Jekyll is a simple, blog-aware, static site
+      generator." href="https://jekyllrb.com/">Jekyll</a> &amp; <a title="Yat, yet
+      another theme." href="https://github.com/jeffreytse/jekyll-theme-yat">Yat Theme</a>.</div>
+      <div class="footer-col rss-subscribe">Subscribe <a href="/jekyll-theme-yat/feed.xml">via RSS</a>
+</div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
